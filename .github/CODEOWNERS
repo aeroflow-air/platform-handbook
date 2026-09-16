@@ -1,0 +1,3 @@
+# Decision records are org-wide governance — the owning team must review
+# before anything under docs/decisions/ merges.
+/docs/decisions/ @aeroflow-air/platform
