@@ -13,6 +13,10 @@ rejected rather than guessed at.
 Usage:
     python3 scripts/validate-decisions.py                 # static checks only
     python3 scripts/validate-decisions.py --base main     # plus diff checks
+
+    # against a different checkout (e.g. run from a borrowed copy of this
+    # script, validating some other repo's docs/decisions/):
+    python3 scripts/validate-decisions.py --repo-root /path/to/other/repo
 """
 
 import argparse
@@ -22,8 +26,7 @@ import sys
 from datetime import date
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
-DECISIONS_DIR = REPO_ROOT / "docs" / "decisions"
+DEFAULT_REPO_ROOT = Path(__file__).resolve().parent.parent
 
 LIFECYCLE_STATUSES = {"draft", "in-review", "accepted", "rejected", "superseded"}
 LOCKED_STATUSES = {"accepted", "rejected", "superseded"}
@@ -121,12 +124,12 @@ def load_records(directory):
 
 # ---- static checks ----
 
-def static_checks(records):
+def static_checks(records, repo_root):
     errors = []
     by_id = {}
 
     for path, (fm, body, parse_errors) in records.items():
-        prefix = f"{path.relative_to(REPO_ROOT)}: "
+        prefix = f"{path.relative_to(repo_root)}: "
         errors += [prefix + e for e in parse_errors]
         if parse_errors:
             continue
@@ -175,7 +178,7 @@ def static_checks(records):
 
     # supersession reciprocity, now that every id is known
     for fm_id, (path, fm) in by_id.items():
-        prefix = f"{path.relative_to(REPO_ROOT)}: "
+        prefix = f"{path.relative_to(repo_root)}: "
         supersedes = fm.get("supersedes")
         superseded_by = fm.get("superseded-by")
 
@@ -204,16 +207,16 @@ def static_checks(records):
 
 # ---- diff checks (PRs only) ----
 
-def git_show(rev, relpath):
+def git_show(repo_root, rev, relpath):
     """Returns file text at rev:relpath, or None if it doesn't exist there."""
     result = subprocess.run(
         ["git", "show", f"{rev}:{relpath}"],
-        cwd=REPO_ROOT, capture_output=True, text=True,
+        cwd=repo_root, capture_output=True, text=True,
     )
     return result.stdout if result.returncode == 0 else None
 
 
-def git_diff_status(base):
+def git_diff_status(repo_root, base):
     """Returns raw `git diff --name-status -M` output for the whole repo,
     following renames. Deliberately unscoped to docs/decisions/ — a record
     that moves directory (e.g. into or out of docs/decisions/) must still
@@ -226,7 +229,7 @@ def git_diff_status(base):
         ["git", "diff", "--name-status", "-M", base, "HEAD"],
     ]
     for cmd in commands:
-        result = subprocess.run(cmd, cwd=REPO_ROOT, capture_output=True, text=True)
+        result = subprocess.run(cmd, cwd=repo_root, capture_output=True, text=True)
         if result.returncode == 0:
             return result.stdout
     return ""
@@ -262,10 +265,10 @@ def read_record(path, records):
     return None
 
 
-def diff_checks(base, records):
+def diff_checks(repo_root, base, records):
     errors = []
 
-    for old_rel, new_rel in parse_diff_status(git_diff_status(base)):
+    for old_rel, new_rel in parse_diff_status(git_diff_status(repo_root, base)):
         relevant_name = Path(new_rel or old_rel).name
         if not FILENAME_RE.match(relevant_name):
             continue
@@ -274,7 +277,7 @@ def diff_checks(base, records):
         if new_rel is None:
             continue  # deleted — not covered by the documented rules
 
-        new_record = read_record(REPO_ROOT / new_rel, records)
+        new_record = read_record(repo_root / new_rel, records)
         if new_record is None:
             continue
         new_fm, new_body, new_errs = new_record
@@ -286,7 +289,7 @@ def diff_checks(base, records):
                 errors.append(prefix + "a new record cannot be created with status 'superseded'")
             continue
 
-        old_text = git_show(base, old_rel)
+        old_text = git_show(repo_root, base, old_rel)
         if old_text is None:
             continue  # shouldn't happen if git reported this as a change, but don't crash the lint over it
 
@@ -318,12 +321,20 @@ def diff_checks(base, records):
 def main():
     parser = argparse.ArgumentParser(description="Validate decision records under docs/decisions/.")
     parser.add_argument("--base", help="Base ref to diff against for lifecycle/immutability checks (e.g. origin/main).")
+    parser.add_argument(
+        "--repo-root", type=Path, default=None,
+        help="Repository to validate (defaults to this script's own repo). "
+             "Set this when running a borrowed copy of the script against a different checkout.",
+    )
     args = parser.parse_args()
 
-    records = load_records(DECISIONS_DIR)
-    errors = static_checks(records)
+    repo_root = args.repo_root.resolve() if args.repo_root else DEFAULT_REPO_ROOT
+    decisions_dir = repo_root / "docs" / "decisions"
+
+    records = load_records(decisions_dir)
+    errors = static_checks(records, repo_root)
     if args.base:
-        errors += diff_checks(args.base, records)
+        errors += diff_checks(repo_root, args.base, records)
 
     if errors:
         print(f"decision record validation failed ({len(errors)} issue{'s' if len(errors) != 1 else ''}):\n")
