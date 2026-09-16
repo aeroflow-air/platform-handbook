@@ -157,16 +157,18 @@ For it to actually gate anything, the check must be listed as required in the
 repository ruleset, alongside required CODEOWNERS review. Without that it
 reports and the merge proceeds regardless.
 
-**Not built yet.** `aeroflow-workflows` is currently just a README — no
-`validate-decisions.yml`, reusable or otherwise. `platform-handbook` runs
-`scripts/validate-decisions.py` directly against its own `docs/decisions/`
-(see above), which needs nothing from `aeroflow-workflows`. This reusable
-wrapper only matters once a service repo actually has service-local
-decisions to validate; build it then, against a real consumer, rather than
-speculatively. The likely shape: a thin workflow that checks out
-`platform-handbook` for the current script and runs it against the calling
-repo's own `docs/decisions/`, so the script keeps one home and the "change
-the validator in the same PR as this document" rule above still holds.
+**Status.** Merged to `aeroflow-workflows@main`. It's a thin workflow: checks
+out `platform-handbook@main` for the current script and runs it, via
+`validate-decisions.py --repo-root`, against the calling repo's own
+`docs/decisions/` — one home for the script, so the "change the validator in
+the same PR as this document" rule above still holds. `platform-handbook`'s
+own CI needs none of this; it runs `scripts/validate-decisions.py` directly
+against itself (see above).
+
+**Not tagged yet.** The `@v1` above won't resolve until someone with tag-push
+rights runs `git tag v1 <sha> && git push origin v1` against
+`aeroflow-workflows@main` (or cuts a GitHub Release for that tag) — the
+credentials this was built with could push branches but not tags.
 
 ## When changing the rules
 
