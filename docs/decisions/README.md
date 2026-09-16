@@ -157,6 +157,17 @@ For it to actually gate anything, the check must be listed as required in the
 repository ruleset, alongside required CODEOWNERS review. Without that it
 reports and the merge proceeds regardless.
 
+**Not built yet.** `aeroflow-workflows` is currently just a README — no
+`validate-decisions.yml`, reusable or otherwise. `platform-handbook` runs
+`scripts/validate-decisions.py` directly against its own `docs/decisions/`
+(see above), which needs nothing from `aeroflow-workflows`. This reusable
+wrapper only matters once a service repo actually has service-local
+decisions to validate; build it then, against a real consumer, rather than
+speculatively. The likely shape: a thin workflow that checks out
+`platform-handbook` for the current script and runs it against the calling
+repo's own `docs/decisions/`, so the script keeps one home and the "change
+the validator in the same PR as this document" rule above still holds.
+
 ## When changing the rules
 
 Change the validator in the same PR as this document. If the two disagree, the
