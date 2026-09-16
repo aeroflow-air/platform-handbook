@@ -157,14 +157,18 @@ For it to actually gate anything, the check must be listed as required in the
 repository ruleset, alongside required CODEOWNERS review. Without that it
 reports and the merge proceeds regardless.
 
-**Status.** Open in `aeroflow-workflows` on `claude/validate-decisions-reusable-workflow`,
-not yet merged or tagged. It's a thin workflow: checks out `platform-handbook@main`
-for the current script and runs it, via `validate-decisions.py --repo-root`,
-against the calling repo's own `docs/decisions/` — one home for the script,
-so the "change the validator in the same PR as this document" rule above
-still holds. `platform-handbook`'s own CI needs none of this; it runs
-`scripts/validate-decisions.py` directly against itself (see above). Once
-merged, tag it `v1` so the `uses:` line above resolves.
+**Status.** Merged to `aeroflow-workflows@main`. It's a thin workflow: checks
+out `platform-handbook@main` for the current script and runs it, via
+`validate-decisions.py --repo-root`, against the calling repo's own
+`docs/decisions/` — one home for the script, so the "change the validator in
+the same PR as this document" rule above still holds. `platform-handbook`'s
+own CI needs none of this; it runs `scripts/validate-decisions.py` directly
+against itself (see above).
+
+**Not tagged yet.** The `@v1` above won't resolve until someone with tag-push
+rights runs `git tag v1 <sha> && git push origin v1` against
+`aeroflow-workflows@main` (or cuts a GitHub Release for that tag) — the
+credentials this was built with could push branches but not tags.
 
 ## When changing the rules
 
