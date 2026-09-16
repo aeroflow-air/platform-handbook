@@ -85,10 +85,15 @@ AeroFlow becomes multi-cloud, or if the platform layer acquires enough
 conditional logic that policy assertion is genuinely insufficient.
 
 **Terraform.** Rejected. Strong module ecosystem and the same state cost as
-Pulumi, with no compensating advantage on an Azure-only estate.
+Pulumi, with no compensating advantage on an Azure-only estate. Revisit under
+the same trigger as Pulumi — a real multi-cloud need, where one tool across
+providers outweighs giving up deployment stacks' state-free lifecycle.
 
 **Raw ARM templates.** Rejected. No authoring ergonomics, no type system, and
-no reason to choose it now that Bicep compiles to the same thing.
+no reason to choose it now that Bicep compiles to the same thing. Revisit only
+if Bicep itself stalls or its tooling regresses badly enough that hand-written
+ARM becomes the more reliable option — unlikely given it's Microsoft's own
+stated direction for the language.
 
 **AVM consumed directly by squads, with no platform layer.** Rejected: the
 opinions are the product. Without a platform module, every squad rediscovers
