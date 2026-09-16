@@ -1,0 +1,28 @@
+name: Validate decision records
+
+on:
+  pull_request:
+    paths:
+      - "docs/decisions/**"
+  push:
+    branches: [main]
+    paths:
+      - "docs/decisions/**"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Static checks
+        run: python3 scripts/validate-decisions.py
+
+      - name: Diff checks against base branch
+        if: github.event_name == 'pull_request'
+        run: python3 scripts/validate-decisions.py --base origin/${{ github.base_ref }}
