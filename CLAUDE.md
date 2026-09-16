@@ -46,7 +46,7 @@ Settled organisation settings, so they are not re-litigated:
 
 | Area | Choice |
 |------|--------|
-| IaC | Pulumi with **C#** — type safety, testability, one language. Not Bicep. |
+| IaC | **Bicep**, with typed module contracts published as versioned OCI artifacts. Not Pulumi — see ADR-0002. |
 | CI | GitHub Actions, with reusable workflows in `aeroflow-workflows`, referenced by tag |
 | Runtime | Containerised. **No Kubernetes** — too much overhead for demonstrating platform interface concepts, and its failure modes leak through the abstraction to squads |
 | Services | APIs, async/queues, database per service, a couple of React frontends |
