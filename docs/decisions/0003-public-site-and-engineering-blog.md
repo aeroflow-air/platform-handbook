@@ -6,7 +6,7 @@ date: 2026-09-20
 deciders: ["@aeroflow-air/platform"]
 supersedes: null
 superseded-by: null
-affects: ["www"]
+affects: ["site-customer"]
 design-doc: null
 ---
 
@@ -27,11 +27,19 @@ The site must stay cheap to host and honest about what it is. It should not
 become a second handbook, and v1 should not require Kubernetes or a custom
 Azure hosting path before the platform's own golden path is ready to prove it.
 
+A singleton repo name such as `www` or `site` would not age well if a second
+public site appears (docs portal, status page, and so on). Naming must allow
+more than one without renaming the first.
+
 ## Decision
 
 We publish a **public product website and engineering blog** for AeroFlow Air.
 
-- **Repository:** `www` (bare descriptive name; organisation-owned, public).
+- **Repository naming:** public sites use `site-<purpose>` (bare descriptive,
+  organisation-owned, public), consistent with ADR-0001's platform-repo style.
+  Further sites follow the same pattern (for example `site-docs`).
+- **This site's repository:** `site-customer` — the customer-facing AeroFlow Air
+  product face and engineering blog.
 - **Hosting:** **GitHub Pages**, deployed by GitHub Actions from `main`.
 - **Stack:** **Astro** with content collections for blog posts (Markdown/MDX).
   Static output only for v1.
@@ -48,7 +56,8 @@ We publish a **public product website and engineering blog** for AeroFlow Air.
 
 The portfolio gains a single URL that explains the fictional company and walks
 a reader through platform work chronologically. Interviewers and peers can read
-the blog without cloning repos.
+the blog without cloning repos. A second public site can land without renaming
+`site-customer`.
 
 What this costs: another repository to maintain, a content cadence expectation
 once posts exist, and discipline to avoid duplicating the handbook. Astro and
@@ -60,6 +69,10 @@ unsettled design belong in design docs or draft ADRs first; the blog narrates
 accepted (or deliberately experimental) work.
 
 ## Alternatives considered
+
+**Singleton name (`www` or `site`).** Rejected. Clear for one site; awkward when
+a second public site appears and forces a rename or an inconsistent sibling.
+Revisit only if the org commits permanently to a single public web property.
 
 **Docusaurus.** Rejected for v1. Strong for a docs portal; weaker fit for a
 short product face plus narrative blog. Revisit if the site becomes primarily a
