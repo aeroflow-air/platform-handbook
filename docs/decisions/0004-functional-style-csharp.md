@@ -40,9 +40,16 @@ New **C# service and shared-library code** prefers a **functional style**:
   business failure paths.
 - Prefer **composition** of small functions and types over deep inheritance.
 
+**No mandated functional library.** The house default is the BCL and idiomatic
+C#. Do not put LanguageExt, or any similar FP framework, in the golden-path
+template or as a required dependency for services. Thin shared helpers in a
+`lib-*` are allowed only after **proven duplication** (the same Result/Option
+shape reinvented in two or three services) and must still pass the design test:
+a squad can delete the library and still ship.
+
 This is **idiomatic functional-leaning C#**, not a mandate to rewrite the stack
-in F# or to adopt a heavy FP framework. The golden-path template and library
-guidance should demonstrate the style; existing code is not mass-rewritten.
+in F#. The golden-path template and library guidance should demonstrate the
+style; existing code is not mass-rewritten.
 
 ## Consequences
 
@@ -52,12 +59,13 @@ surprises at runtime. Reviewers get a shared vocabulary ("keep this pure",
 "lift the side effect") instead of arguing taste every PR.
 
 What this costs: a learning curve for engineers steeped in mutable OOP, and
-some ceremony around result types if we standardise them in a `lib-*`. Hot
-paths that need mutable buffers or interop with mutable BCL APIs remain
-allowed — the rule is default preference, not purity theatre.
+some local ceremony when a service needs a small Result type before any shared
+`lib-*` exists. Hot paths that need mutable buffers or interop with mutable BCL
+APIs remain allowed — the rule is default preference, not purity theatre.
 
-What becomes harder: copy-pasting anemic mutable services from older samples.
-The template must stay the exemplar, or the decision evaporates in practice.
+What becomes harder: copy-pasting anemic mutable services from older samples,
+and quietly growing a de-facto framework by slipping LanguageExt into the
+template. The template must stay the exemplar, or the decision evaporates.
 
 ## Alternatives considered
 
@@ -74,9 +82,10 @@ path is cheaper than stretching C# idioms.
 
 **Mandate LanguageExt (or similar) for all services.** Rejected. Useful library;
 too much framework gravity for a design test that says a squad must be able to
-delete a shared library and still ship. Prefer BCL + thin local helpers first.
-Revisit if multiple services reinvent the same Result/Option primitives and a
-small `lib-*` clearly reduces duplication without becoming a framework.
+delete a shared library and still ship. Prefer BCL + thin local helpers first;
+promote a small `lib-*` only after proven duplication. Revisit if that thin lib
+itself grows real FP machinery and pinning one established package is clearly
+cheaper than maintaining ours.
 
 **No style ADR — leave it to PR taste.** Rejected. Without a recorded default,
 the golden path cannot teach a consistent shape and reviews re-litigate the
