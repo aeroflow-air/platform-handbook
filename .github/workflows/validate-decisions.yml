@@ -1,9 +1,10 @@
 name: Validate decision records
 
 on:
+  # Runs on every PR (no paths filter) because `validate` is a required status
+  # check on main. A path-filtered required check never reports on PRs that
+  # don't touch decisions, which would leave them blocked forever.
   pull_request:
-    paths:
-      - "docs/decisions/**"
   push:
     branches: [main]
     paths:
