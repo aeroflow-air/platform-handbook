@@ -1,7 +1,7 @@
 ---
 id: 4
 title: Functional-style C# for service code
-status: draft
+status: in-review
 date: 2026-09-22
 deciders: ["@aeroflow-air/platform"]
 supersedes: null
