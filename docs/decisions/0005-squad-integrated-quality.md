@@ -1,7 +1,7 @@
 ---
 id: 5
 title: Quality skill lives in the squad, not a QA department
-status: in-review
+status: accepted
 date: 2026-09-22
 deciders: ["@aeroflow-air/platform"]
 supersedes: null
