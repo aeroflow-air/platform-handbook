@@ -22,11 +22,12 @@ libraries and infrastructure live in their own repositories.
 
 ## Organisation conventions
 
-Repositories are prefixed by category — `svc-`, `lib-`, `infra-`, `template-`.
-Repos that are part of the platform's own operation keep a bare descriptive
-name (`platform-handbook`, `.github`, `aeroflow-workflows`). Names are
-lowercase, hyphen-separated, and describe the business capability rather than
-the technology: `svc-booking`, not `svc-booking-api-dotnet`. See ADR-0001.
+Repositories are prefixed by category — `svc-`, `lib-`, `infra-`, `template-`,
+and `site-` for public websites (`site-<purpose>`, e.g. `site-customer`; see
+ADR-0003). Repos that are part of the platform's own operation keep a bare
+descriptive name (`platform-handbook`, `.github`, `aeroflow-workflows`). Names
+are lowercase, hyphen-separated, and describe the business capability rather
+than the technology: `svc-booking`, not `svc-booking-api-dotnet`. See ADR-0001.
 
 Settled organisation settings, so they are not re-litigated:
 
@@ -51,6 +52,7 @@ Settled organisation settings, so they are not re-litigated:
 | Runtime | Containerised. **No Kubernetes** — too much overhead for demonstrating platform interface concepts, and its failure modes leak through the abstraction to squads |
 | Services | APIs, async/queues, database per service, a couple of React frontends |
 | Service scaffolding | A template repo plus **small, independently versioned libraries** (health checks, OTel at startup, config binding, error middleware, ProblemDetails, structured logging) |
+| Public site | **Astro** on GitHub Pages in `site-customer`, deployed by Actions from `main`. Not on the platform's own hosting path until a later ADR — see ADR-0003. |
 
 Deliberately excluded: Kubernetes, Dagger. Do not reintroduce them without an
 ADR that supersedes the one rejecting them.
@@ -80,7 +82,9 @@ Records live in `docs/decisions/`, named `<id>-<slug>.md` with a zero-padded
 four-digit id. `_template.md` is the starting point.
 
 Lifecycle: `draft → in-review → accepted | rejected`, and `accepted →
-superseded`.
+superseded`. The validator compares each PR with `main`, so every step is its
+own merged PR: a draft cannot go straight to accepted. See
+`docs/decisions/README.md`.
 
 Once a record is accepted, rejected or superseded, **only `status` and
 `superseded-by` may ever change**. Changed your mind? Write a new record with
@@ -88,11 +92,12 @@ Once a record is accepted, rejected or superseded, **only `status` and
 Every rejected alternative names the trigger that would make it worth
 revisiting.
 
-`scripts/validate-decisions.py` enforces all of this in CI — frontmatter shape,
-unique ids matching filenames, legal status transitions, reciprocal supersession
-links, and body immutability after a decision. It is intentionally
+`scripts/validate-decisions.py` enforces the mechanical rules in CI —
+frontmatter shape, unique ids matching filenames, legal status transitions,
+reciprocal supersession links, and body immutability after a decision. Content,
+including the revisit triggers, is review's job. It is intentionally
 dependency-free stdlib Python: a repo-local lint with no runtime, not part of
-any service, so it does not need to match the C#/Go estate. When changing the
+any service, so it does not need to match the C# estate. When changing the
 rules, change the validator in the same PR.
 
 ## Project management
@@ -119,6 +124,6 @@ record, the PR and the deployment, with no integration tax.
 - Whether the audience is Head of Platform interviews (polish, narrative arc)
   or a sandbox for practices to bring back to day-job work. The two pull
   scope in different directions.
-- A customer-facing site explaining the fictional company, with an engineering
-  blog documenting each phase and its decisions — built on the platform's own
-  architecture, so it doubles as a golden-path proof.
+- When to move the public site onto the platform's own architecture, so it
+  doubles as a golden-path proof. The site itself is decided (ADR-0003) and
+  stays on GitHub Pages until a later ADR changes that.
