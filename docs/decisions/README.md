@@ -73,7 +73,7 @@ Legal transitions, and nothing else:
 | `superseded`| — terminal                    |
 
 `in-review → draft` exists so a reviewer can send something back. Everything
-else moves forward only.
+else moves forward only, one step per merged PR (see the flow below).
 
 ## The immutability rule
 
@@ -89,11 +89,16 @@ value of the log is that it shows what you believed at the time.
 ## The flow, end to end
 
 1. Copy `_template.md` to `docs/decisions/<next-id>-<slug>.md`, status `draft`.
-2. Open a PR. Draft records can be pushed freely — CI checks the shape, not the
-   content.
-3. Move to `in-review` when it is ready to be argued with. CODEOWNERS review is
-   required on `docs/decisions/`, so the owning team is pulled in automatically.
-4. On agreement, flip to `accepted` in the same PR and merge.
+2. Open a PR and merge it as a draft. Draft records can be pushed freely — CI
+   checks the shape, not the content.
+3. When it is ready to be argued with, open a PR that moves it to `in-review`
+   and merge it. The body can still change at this stage. CODEOWNERS names
+   `@aeroflow-air/platform` as owner of `docs/decisions/`, but review is not
+   currently required: the only required check on `main` is `validate`.
+4. On agreement, open a separate PR that changes only `status` to `accepted`,
+   and merge it. It has to be separate: the validator compares each PR with
+   `main`, so a PR can move a record one step only, and `draft → accepted` in
+   one PR fails as an illegal transition.
 5. To supersede later: a new PR containing both the new record and the two-field
    change to the old one. The validator rejects a one-sided link, so they cannot
    drift apart.
@@ -101,16 +106,18 @@ value of the log is that it shows what you believed at the time.
 ## What CI enforces
 
 `scripts/validate-decisions.py`, run by `.github/workflows/validate-decisions.yml`
-on pull requests touching `docs/decisions/`, and on push to `main`.
+on every pull request (no paths filter, because `validate` is a required check
+on `main`), and on pushes to `main` that touch `docs/decisions/`.
 
 Static checks, always:
 
-- frontmatter parses, and required keys are present and non-empty
+- frontmatter parses, required keys are present, and `title`, `deciders` and
+  `affects` are non-empty
 - `id` is an integer, matches the filename, and is unique across the directory
 - `status` is a known lifecycle value
 - `date` is ISO-8601
-- `supersedes` / `superseded-by` are reciprocal, both records exist, and a
-  record with `superseded-by` set has status `superseded`
+- `supersedes` / `superseded-by` are reciprocal, both records exist, and the
+  superseded record has status `superseded`
 
 Diff checks, on pull requests only — these compare against the base branch, so
 the workflow checks out with `fetch-depth: 0` and passes
