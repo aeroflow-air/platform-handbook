@@ -42,10 +42,11 @@ infrastructure, on the route to live from governed platform modules only.**
   `advanced` keys; gate failures link to the entry.
 - **Versioning.** Exact pins (`br/platform:key-vault:1.4.0`), never overwritten;
   semver, with major for a broken caller or replaced resource; a changelog per
-  module. Squads upgrade in their own PR with what-if; old majors stay while
-  pinned. Ideally each release raises upgrade PRs: Renovate updates Bicep
-  `resource` API versions, not module references, so a custom regex manager is
-  to be confirmed, else a small job of ours.
+  module. Upgrades reach squads as automated PRs from self-hosted Renovate (a
+  GitHub Action) with a custom rule in an org preset; squads merge them, with
+  what-if, when it suits them; old majors stay while pinned. The rule is proven
+  against a public OCI registry; private ACR sign-in via OIDC is still to be
+  confirmed ([how upgrades reach squads](../infrastructure/module-upgrades.md)).
 - **Missing capability: contribute first.** The squad writes the module in
   `infra-platform` from a scaffold generating naming, tags, identity,
   diagnostics, the `aeroflow-module` tag and a test. Platform reviews to a short
@@ -62,8 +63,10 @@ infrastructure, on the route to live from governed platform modules only.**
      `job_workflow_ref` in the subject. **To confirm with a real token:**
      standard federated credentials match exactly, so each workflow release
      needs new ones per repo and environment (20 per identity); flexible ones
-     can wildcard it but are preview, REST-only, and must also match `sub` and
-     `repository_id` or `repository_owner_id`. Else: repo-and-environment scope.
+     can wildcard it but are preview, set up in the portal, Microsoft Graph
+     (apps) or ARM REST (managed identities), not Azure CLI, PowerShell or
+     Terraform, and must also match `sub` and `repository_id` or
+     `repository_owner_id`. Else: repo-and-environment scope.
   3. **Policy backstop.** Modules stamp an `aeroflow-module` tag (name,
      version). Azure Policy audits squad resource groups for untagged resources,
      portal-made ones included, and moves to deny once quiet.
@@ -85,6 +88,8 @@ tests and releases. Nothing stops portal Owner rights and anyone with write
 access can copy a tag, so layer 3 catches drift, not a determined bypass. In a
 one-person organisation required CODEOWNERS review cannot be met, so CI and the
 gate enforce until a second maintainer exists. We give up unit tests.
+Renovate is ours to run: a workflow, a token, and an alias map kept in step
+with `bicepconfig.json` by hand. Its PRs carry no release notes.
 
 We track time to first deploy for a new service, time from missing-module
 request to published version, and how often `advanced` keys are requested.
