@@ -1,7 +1,7 @@
 ---
 id: 0003
 title: Public site and engineering blog on GitHub Pages
-status: in-review
+status: accepted
 date: 2026-09-20
 deciders: ["@aeroflow-air/platform"]
 supersedes: null
