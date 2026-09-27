@@ -1,12 +1,12 @@
 ---
 id: 0003
 title: Public site and engineering blog on GitHub Pages
-status: draft
+status: in-review
 date: 2026-09-20
 deciders: ["@aeroflow-air/platform"]
 supersedes: null
 superseded-by: null
-affects: ["www"]
+affects: ["site-customer"]
 design-doc: null
 ---
 
@@ -19,9 +19,10 @@ curious engineer will not casually browse end-to-end.
 
 An open question in the handbook is whether the audience is Head of Platform
 interviews (narrative arc, polish) or a sandbox for practices to bring back to
-day-job work. A public site can serve both: a short customer-facing face for the
-airport domain, and an engineering blog that documents each platform phase with
-links back to the decision records that justified it.
+day-job work. A public site can serve both: a short public face that introduces
+the fictional company and its airport domain, and an engineering blog that
+documents each platform phase with links back to the decision records that
+justified it.
 
 The site must stay cheap to host and honest about what it is. It should not
 become a second handbook, and v1 should not require Kubernetes or a custom
@@ -29,14 +30,23 @@ Azure hosting path before the platform's own golden path is ready to prove it.
 
 ## Decision
 
-We publish a **public product website and engineering blog** for AeroFlow Air.
+We publish a **public website and engineering blog** for AeroFlow Air.
 
-- **Repository:** `www` (bare descriptive name; organisation-owned, public).
-- **Hosting:** **GitHub Pages**, deployed by GitHub Actions from `main`.
+- **Repository:** `site-customer` (organisation-owned, public). Any further
+  public sites follow the same `site-<purpose>` pattern. ADR-0001's category
+  prefixes do not cover websites, so this record adds `site-` for them. Decided
+  on 2026-09-21; the first draft of this record said `www`.
+- **Hosting:** **GitHub Pages**, deployed by GitHub Actions from `main`. The
+  site is a project site at `https://aeroflow-air.github.io/site-customer/`, so
+  it builds with the base path `/site-customer/`.
+- **Build check:** every pull request runs `pr-build` (`npm install` and
+  `npm run build`), and `main` requires it to pass before merge.
 - **Stack:** **Astro** with content collections for blog posts (Markdown/MDX).
   Static output only for v1.
-- **Information architecture:** a small customer-facing home (fictional product),
-  an Engineering section for the blog, and a Platform page that **links into**
+- **Information architecture:** a home page that introduces the platform, links
+  to what is actually built, and presents the fictional airport as the problem
+  space rather than as shipped product; an Engineering section for the blog
+  under `/engineering/`; and a Platform page that **links into**
   `platform-handbook` rather than copying ADRs. Blog posts may summarise a phase
   and must cite the relevant decision record by link; the handbook remains the
   source of truth for decisions.
