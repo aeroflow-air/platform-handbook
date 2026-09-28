@@ -1,11 +1,11 @@
 ---
 id: 0002
 title: Infrastructure as code — Bicep with typed module contracts
-status: accepted
+status: superseded
 date: 2026-09-12
 deciders: ["@aeroflow-air/platform"]
 supersedes: null
-superseded-by: null
+superseded-by: 6
 affects: ["all-repos"]
 design-doc: null
 ---
