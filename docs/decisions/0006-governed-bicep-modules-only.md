@@ -1,10 +1,10 @@
 ---
 id: 6
 title: Infrastructure as code — squads self-serve through governed Bicep modules only
-status: in-review
+status: accepted
 date: 2026-09-27
 deciders: ["@aeroflow-air/platform"]
-supersedes: null
+supersedes: 2
 superseded-by: null
 affects: ["infra-platform", "aeroflow-workflows", "svc-*", "template-dotnet-service"]
 design-doc: null
