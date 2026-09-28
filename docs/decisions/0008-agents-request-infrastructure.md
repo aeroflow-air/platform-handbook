@@ -1,7 +1,7 @@
 ---
 id: 8
 title: Agents author application code and request infrastructure through a manifest
-status: draft
+status: in-review
 date: 2026-09-28
 deciders: ["@aeroflow-air/platform"]
 supersedes: null
