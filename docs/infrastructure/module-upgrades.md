@@ -1,8 +1,8 @@
 # How platform module upgrades reach squads
 
 Squads deploy their infrastructure from governed Bicep modules published by the
-platform as `br/platform:*`, pinned to exact versions (see ADR-0006, still a
-draft). This page describes how a new module version gets from the platform
+platform as `br/platform:*`, pinned to exact versions (see ADR-0006).
+This page describes how a new module version gets from the platform
 into every service that uses the module, without the platform chasing anyone.
 
 **Status.** Designed and proven locally, not yet running in the organisation.
@@ -83,5 +83,4 @@ OIDC (`azure/login`, then `az acr login --expose-token`, passed to Renovate as
 a host rule) and is still to be confirmed.
 
 The decision this supports is ADR-0006,
-[`docs/decisions/0006-governed-bicep-modules-only.md`](../decisions/0006-governed-bicep-modules-only.md),
-which is a draft and may still change.
+[`docs/decisions/0006-governed-bicep-modules-only.md`](../decisions/0006-governed-bicep-modules-only.md).
