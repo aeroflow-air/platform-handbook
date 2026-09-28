@@ -107,8 +107,8 @@ rules, change the validator in the same PR.
 Work is tracked in a single **org-level GitHub Project**, not per-repo — most
 meaningful work crosses repos. Few custom fields (Squad, Type, Status), status
 transitions driven by built-in workflows on PR open and merge rather than by
-hand. The choice of GitHub Projects over a dedicated tool is itself a recorded
-decision: one system of record for the work item, the design doc, the decision
+hand. GitHub Projects over a dedicated tool is the current convention, with no
+ADR yet: one system of record for the work item, the design doc, the decision
 record, the PR and the deployment, with no integration tax.
 
 ## Working preferences
