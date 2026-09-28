@@ -21,10 +21,9 @@ by the shared deploy workflow's gate, but lets a squad compose any catalogue
 module by hand. For agents that is the wrong grain: what needs review is which
 capabilities a service needs, not which Bicep an agent wrote.
 
-None of the enforcement exists yet. There is no `workload.yaml` in any repo, no
-gate in `aeroflow-workflows` (it holds `dotnet-ci.yml`, `validate-decisions.yml`
-and a self-test), no `infra-platform` repo, no sandboxes and no `.bicep`
-anywhere in the organisation.
+None of the enforcement exists yet: no `workload.yaml` in any repo, no gate in
+`aeroflow-workflows` (only `dotnet-ci.yml`, `validate-decisions.yml` and a
+self-test), no `infra-platform` repo and no `.bicep` anywhere in the org.
 
 ## Decision
 
