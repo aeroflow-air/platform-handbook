@@ -51,17 +51,20 @@ modules:
 - **Side door.** ADR-0006 stands unchanged: a squad may hand-compose governed
   `br/platform:*` modules in `infra/`, so nobody waits on Platform for a
   one-off.
-- **Guard.** Any change under `infra/` is labelled `infra-boundary`
-  automatically and needs approval from a human in the owning squad
-  (`CODEOWNERS` on `infra/`, required code-owner review). It is by path, not
-  author. ADR-0008 still says agents do not write Bicep; an `infra/` change
-  an agent proposes anyway cannot merge alone.
-- **Feedback loop.** Side-door use is discovery. The label makes those PRs
-  searchable across the org. When the same composition recurs in about three
-  services, it becomes a capability with a module.
-- **Modules.** ADR-0006's contribute-first route stands: a squad may
-  contribute a module to `infra-platform`, which Platform then owns. The
-  hosting module is `container-app-service`.
+- **Guard.** Any change under `infra/` needs approval from a human in the
+  owning squad, selected by path, not author, plus Platform approval if it
+  touches identity or network, as ADR-0013 plans for manifest changes.
+  ADR-0008 still says agents do not write Bicep; the guard is a backstop.
+- **Guard in stages.** Now: a `CODEOWNERS` entry for `infra/`, with
+  `squad-checkin` owning both `svc-*` repos and `template-dotnet-service`,
+  and an `infra-boundary` label applied by GitHub's labeler action
+  (`actions/labeler`). Later, once a squad has a second member: required
+  code-owner review in branch protection.
+- **Feedback loop.** Side-door use is discovery; the label makes it
+  searchable across the org. A composition that recurs across services
+  (about three, as a rule of thumb) becomes a capability with a module.
+- **Modules.** ADR-0006's contribute-first route stands; Platform owns what
+  squads contribute. The hosting module is `container-app-service`.
 - **Sandboxes.** Agents may work there. Sandbox work reaches a service repo
   only as a manifest change, or for humans through the side door.
 
@@ -74,23 +77,24 @@ in a service repo is only governed modules, reviewed by a squad human".
 
 The done test still holds: a new service can be built without writing a
 `resource` block. Identity and network changes still get a human, through
-ADR-0013 on the manifest or the guard in `infra/`.
+ADR-0013 on the manifest, or the squad and Platform in `infra/`.
 
 The generator is our code: a bug in it reaches every service, so it needs
 tests and releases like ADR-0006's gate. The Renovate rule in
 `docs/infrastructure/module-upgrades.md`, tested on Bicep only, must handle
 pins in both YAML and Bicep.
 
-The guard needs a second human. ADR-0006 notes that required code-owner
-review cannot be met in a one-person organisation, and today each team has
-one member.
+Until the second stage the guard is advisory: `CODEOWNERS` requests the
+squad's review and the label marks the PR, but nothing blocks a merge. Both
+`squad-checkin` and `platform` have one member today, and ADR-0006 notes that
+required code-owner review cannot be met in a one-person organisation.
 
 Open, not decided here:
 
 - The capability-to-module mapping, until the first module is published.
 - Who reads the `infra-boundary` search, and how often.
-- Whether `infra/` changes touching identity or network also need Platform,
-  as planned for manifest changes in ADR-0013.
+- How an `infra/` change is recognised as touching identity or network, since
+  the path alone does not say.
 
 Revisit if the generator becomes the queue.
 
