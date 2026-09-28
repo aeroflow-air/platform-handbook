@@ -91,7 +91,6 @@ replica, or the idle-deletion policy bites.
 
 ## References
 
-
 - https://learn.microsoft.com/en-us/azure/container-apps/environment
 - https://learn.microsoft.com/en-us/azure/container-apps/workload-profiles-overview
 - https://learn.microsoft.com/en-us/azure/container-apps/scale-app
