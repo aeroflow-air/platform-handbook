@@ -60,6 +60,8 @@ ADR that supersedes the one rejecting them.
 **Design test for anything shared:** can a squad delete the library and still
 ship? If no, it is a framework, not a foundation — the same failure mode as an
 over-abstracted pipeline. Prefer composition a squad can opt out of.
+This applies to code libraries. Infrastructure modules are the exception: on
+the route to live, squads must use governed `br/platform:*` modules (ADR-0006).
 
 ## Releases
 
