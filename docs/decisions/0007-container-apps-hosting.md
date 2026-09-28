@@ -1,7 +1,7 @@
 ---
 id: 7
 title: Service hosting on Azure Container Apps
-status: in-review
+status: accepted
 date: 2026-09-28
 deciders: ["@aeroflow-air/platform"]
 supersedes: null
