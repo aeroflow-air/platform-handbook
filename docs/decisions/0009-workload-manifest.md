@@ -90,7 +90,7 @@ Open, not decided here:
 - The capability-to-module mapping, until the first module is published.
 - Who reads the `infra-boundary` search, and how often.
 - Whether `infra/` changes touching identity or network also need Platform,
-  as ADR-0013 will require for the manifest.
+  as planned for manifest changes in ADR-0013.
 
 Revisit if the generator becomes the queue.
 
