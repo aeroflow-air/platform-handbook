@@ -59,7 +59,8 @@ modules:
   `squad-checkin` owning both `svc-*` repos and `template-dotnet-service`,
   and an `infra-boundary` label applied by GitHub's labeler action
   (`actions/labeler`). Later, once a squad has a second member: required
-  code-owner review in branch protection.
+  code-owner review in branch protection, and Platform's review becomes
+  required at the same trigger.
 - **Feedback loop.** Side-door use is discovery; the label makes it
   searchable across the org. A composition that recurs across services
   (about three, as a rule of thumb) becomes a capability with a module.
