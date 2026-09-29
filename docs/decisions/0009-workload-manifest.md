@@ -1,7 +1,7 @@
 ---
 id: 9
 title: Workload manifest as the paved road, with a guarded side door in infra/
-status: in-review
+status: accepted
 date: 2026-09-28
 deciders: ["@aeroflow-air/platform"]
 supersedes: null
