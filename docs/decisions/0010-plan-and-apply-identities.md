@@ -1,7 +1,7 @@
 ---
 id: 10
 title: Plan and apply are separate identities, and apply only happens in Actions
-status: draft
+status: in-review
 date: 2026-09-28
 deciders: ["@aeroflow-air/platform"]
 supersedes: null
