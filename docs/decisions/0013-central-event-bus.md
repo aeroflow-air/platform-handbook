@@ -39,6 +39,21 @@ from published pricing.
 Services request it through the `queue` capability. Local development uses the
 official Service Bus emulator (or Aspire `RunAsEmulator`) at zero cloud cost.**
 
+### Tony's decision (2026-10-05 ~13:07 Europe/London)
+
+**Azure Service Bus spend is deferred.** For now:
+
+- Use the **local Service Bus emulator only** (Aspire `RunAsEmulator` / MCR
+  emulator container).
+- **Do not create an Azure Service Bus namespace** until a later, explicit
+  decision when we actually deploy.
+- **Zero Azure messaging cost for now** — the cost table below remains as the
+  published pricing reference for that future go/no-go; it is not authorization
+  to provision.
+
+The broker choice (Service Bus topics, Standard tier to start) stands. Only the
+timing of Azure spend is deferred.
+
 ### Broker and topology
 
 - **One namespace** (platform-owned) hosting **topics** for integration events
@@ -87,12 +102,13 @@ official Service Bus emulator (or Aspire `RunAsEmulator`) at zero cloud cost.**
   is on (template issues #8 / #10 / #14). Correlation id remains available for
   non-OTel readers.
 
-### Azure cost (published figures; spend is Tony's call)
+### Azure cost (published figures; spend deferred — see Tony's decision above)
 
 Figures below are **UK South** retail prices from the
 [Azure Retail Prices API](https://prices.azure.com/api/retail/prices) retrieved
 2026-10-05, cross-checked against the public pricing pages. They are estimates,
-not a quote. **Do not provision until Tony accepts the spend.**
+not a quote. **Kept for the later deploy decision. Do not provision an Azure
+namespace now — local emulator only until then.**
 
 | Meter (Service Bus) | UK South retail | Source |
 |---------------------|-----------------|--------|
@@ -118,11 +134,12 @@ Squads get ordered, dead-letterable pub/sub that fits Container Apps and the
 inner loop free. Traceable flight stories become possible once contracts and
 OTel land.
 
-Costs: a Standard namespace base charge whenever it exists in the subscription
-(Tony's decision); platform ownership of the namespace and module; subscription
-filter and DLQ operational practice. Emulator gaps versus cloud (Microsoft: no
-production SLA; sequential test focus) mean some behaviours still need a cheap
-Azure smoke test before go-live.
+Costs: **none in Azure for now** (emulator only per Tony's 2026-10-05
+decision). When a later decision authorizes a namespace, expect a Standard base
+charge whenever it exists in the subscription; platform ownership of the
+namespace and module; subscription filter and DLQ operational practice. Emulator
+gaps versus cloud (Microsoft: no production SLA; sequential test focus) mean
+some behaviours will still need a cheap Azure smoke test before go-live.
 
 What becomes harder: treating Event Grid system topics or MQTT as the primary
 service-to-service bus without another ADR; enabling Dapr sidecars on Container

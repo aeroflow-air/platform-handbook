@@ -6,7 +6,7 @@ date: 2026-10-05
 deciders: ["@aeroflow-air/platform"]
 supersedes: null
 superseded-by: null
-affects: ["svc-*", "template-dotnet-service", "aeroflow-workflows"]
+affects: ["aeroflow-local", "svc-*", "template-dotnet-service", "aeroflow-workflows"]
 design-doc: null
 ---
 
@@ -23,7 +23,8 @@ dashboard.
 estate. It must not become the production host: deploy remains Azure Container
 Apps via `workload.yaml` (ADR-0007, ADR-0009). The event bus choice in ADR-0013
 (Service Bus topics + official emulator) and identity planning (#51) need a
-local plug-in point. No dedicated local-dev repo exists yet.
+local plug-in point. The AppHost home is now
+[`aeroflow-local`](https://github.com/aeroflow-air/aeroflow-local) (see below).
 
 ## Decision
 
@@ -76,22 +77,19 @@ compose services, the Service Bus emulator, and an identity stand-in under one
 
 ### Where the AppHost lives
 
-**Recommended default:** a new repository, e.g. `aeroflow-local`, holding the
-AppHost, ServiceDefaults (if not already published from the template), demo
+**Decided:** the AppHost lives in
+[`aeroflow-air/aeroflow-local`](https://github.com/aeroflow-air/aeroflow-local)
+(public, MIT, README already present). That repo holds the Aspire AppHost,
+ServiceDefaults (until published from the template), placeholder services, demo
 seed data and compose documentation. Service repos stay lean; the AppHost
-depends on them as project or package references.
+depends on them as project references via a documented sibling-clone layout
+(implementation: platform-handbook#55).
 
-**Creating that repo needs Tony's explicit OK** (org repo creation, naming,
-visibility). Until then, a short-lived AppHost may live in
-`template-dotnet-service` or a spike branch — but the durable home should be a
-dedicated local-dev repo so `svc-*` repos are not forced to know about every
-sibling.
-
-Alternatives for location (brief):
+Alternatives considered for location (brief; historical):
 
 | Home | Pros | Cons |
 |------|------|------|
-| New `aeroflow-local` (recommended) | Clear local-vs-prod boundary; one place for seed/demo | Needs Tony's OK to create |
+| **`aeroflow-local` (chosen)** | Clear local-vs-prod boundary; one place for seed/demo | Cross-repo project references need a clone convention |
 | Inside `template-dotnet-service` | Fast to start | Template becomes a platform orchestrator; confusing for scaffold consumers |
 | Monorepo of all `svc-*` | Trivial project references | Contradicts current multi-repo layout; large migration |
 | Per-service mini AppHosts only | Low coupling | No “whole platform” one-command story — fails #54 |
@@ -108,9 +106,10 @@ for the emulator (and SQL dependency the emulator needs); deciding package vs
 project references across repos. Risk if Aspire Azure-deploy features creep in
 and bypass governed modules — rejected here until another record.
 
-Open until Tony decides: create `aeroflow-local` (or another name); whether
-ServiceDefaults is copied, packaged, or submodule'd from the template; identity
-stand-in product (#51).
+Resolved: AppHost home is
+[`aeroflow-local`](https://github.com/aeroflow-air/aeroflow-local). Still open:
+whether ServiceDefaults is copied, packaged, or submodule'd from the template;
+identity stand-in product details beyond the local free-container choice (#51).
 
 ## Alternatives considered
 
