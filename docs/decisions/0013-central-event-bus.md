@@ -54,6 +54,11 @@ official Service Bus emulator (or Aspire `RunAsEmulator`) at zero cloud cost.**
 The broker choice (Service Bus topics, Standard tier to start) stands. Only the
 timing of Azure spend is deferred.
 
+**Note on ADR-0009:** that accepted record still forward-references
+"ADR-0013" for confidential approval. That wording predates this event-bus
+record and now means **a future ADR**. Accepted ADR bodies may only change
+status / superseded-by, so ADR-0009 is left unchanged.
+
 ### Broker and topology
 
 - **One namespace** (platform-owned) hosting **topics** for integration events

@@ -45,7 +45,7 @@ modules:
 - **Schema.** `workload`, `repo`, `dataClass` (`public`, `internal` or
   `confidential`), `capabilities` (an enum starting at `http`, `identity`,
   `store`, `queue`) and `modules` (exact pins in Bicep's colon form). It lives
-  in `aeroflow-workflows`, versioned with its tags. A future ADR is planned to
+  in `aeroflow-workflows`, versioned with its tags. ADR-0013, planned, is to
   key human approval on `confidential`. A new capability needs a module and
   an ADR (ADR-0008).
 - **Side door.** ADR-0006 stands unchanged: a squad may hand-compose governed
@@ -53,7 +53,7 @@ modules:
   one-off.
 - **Guard.** Any change under `infra/` needs approval from a human in the
   owning squad, selected by path, not author, plus Platform approval if it
-  touches identity or network, as a future ADR plans for manifest changes.
+  touches identity or network, as ADR-0013 plans for manifest changes.
   ADR-0008 still says agents do not write Bicep; the guard is a backstop.
 - **Guard in stages.** Now: a `CODEOWNERS` entry for `infra/`, with
   `squad-checkin` owning both `svc-*` repos and `template-dotnet-service`,
@@ -78,7 +78,7 @@ in a service repo is only governed modules, reviewed by a squad human".
 
 The done test still holds: a new service can be built without writing a
 `resource` block. Identity and network changes still get a human, through
-a future ADR on the manifest, or the squad and Platform in `infra/`.
+ADR-0013 on the manifest, or the squad and Platform in `infra/`.
 
 The generator is our code: a bug in it reaches every service, so it needs
 tests and releases like ADR-0006's gate. The Renovate rule in
