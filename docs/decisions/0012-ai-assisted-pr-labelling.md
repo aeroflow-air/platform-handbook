@@ -27,11 +27,16 @@ edited the change**, and **AI that only helped review**. ADR-0011’s join to
 review time and CFR is about authoring, not review tooling — so the labels must
 distinguish them.
 
+Manual checkboxes alone will under-report. This record therefore also defines
+**how automation applies labels**, how humans override it, and how that maps to
+the staged enforcement path — without jumping straight to a hard merge gate.
+
 ## Decision
 
 **Source of truth for metrics: GitHub PR labels, applied before merge.** Authors
-are prompted by a PR template checkbox; automation may sync or remind; commit
-trailers are optional and never the metric source.
+are prompted by a PR template checkbox; automation detects high-confidence
+signals and applies labels; commit trailers remain a detection input, not the
+metric store.
 
 ### Labels (org-standard)
 
@@ -39,85 +44,161 @@ trailers are optional and never the metric source.
 |-------|--------|------------------------------|
 | `ai-authored` | A **substantial** share of the diff was AI-generated or AI-edited (Copilot, ChatGPT, Cursor, agents, etc.). “Substantial” is author judgement: more than trivial autocomplete. | **Yes** — this is the cohort |
 | `ai-reviewed` | AI was used in **review** (summary, suggested comments, risk scan) but did not author the change. | **No** — tracked separately later if useful |
-| *(neither)* | No meaningful AI involvement, or author declines to claim it. | Counts as not AI-authored |
+| `ai-declaration:none` | Author explicitly asserts neither authored nor reviewed assistance. | Counts as not AI-authored |
+| `ai-label:auto` | At least one of `ai-authored` / `ai-reviewed` was applied by automation, not by a human. Removable when a human confirms or corrects. | Meta only — ignored by metrics |
 
 Do **not** use a vague `ai-assisted` umbrella once this record is accepted — it
 collapses the two meanings ADR-0011 needs to keep apart. Prefer exactly one of
 `ai-authored` or `ai-reviewed` when only one applies; both may appear if AI both
-wrote and reviewed.
+wrote and reviewed. `ai-declaration:none` is mutually exclusive with the other
+two content labels for metric purposes (if both somehow appear, content labels
+win and automation should remove `none`).
 
-### How authors and bots mark
+### How authors mark (human path)
 
-1. **PR template** (golden path + handbook): a short checklist:
+1. **PR template** (golden path + handbook): checklist —
    - [ ] `ai-authored` — substantial AI-generated or AI-edited code
    - [ ] `ai-reviewed` — AI used only in review
    - [ ] Neither
-2. **Author** (or the opening bot) applies the matching label(s) when opening or
-   before ready-for-review. Self-marking is enough at this scale.
-3. **Optional automation** (later, in `aeroflow-workflows`):
-   - Reminder comment if the PR is `ready for review` and has none of the three
-     declarations (no label and checklist unchecked).
-   - Sync: if the template checkbox is ticked and the label is missing, apply
-     the label (and vice versa for untick → remove, only while open).
-4. **Commit trailer** `Ai-Assisted: authored|reviewed` is **optional** for
-   people who prefer git-native notes. CI may *suggest* a label from trailers
-   on the PR’s commits; it must **not** be the only signal (squash merges drop
-   or rewrite trailers; metrics query PRs, not commit graphs).
+2. **Author** applies matching label(s), or ticks Neither (automation will add
+   `ai-declaration:none` when syncing from the template).
+3. **Optional trailer** on commits: `Ai-Assisted: authored|reviewed|none` —
+   detection input for the bot, not the dashboard query.
 
-### What counts
+### Automation design
 
-- **AI-authored:** model-produced or heavily model-edited code, config, tests,
-  or docs that land in the merge. Human-written code with light autocomplete
-  does not need the label.
-- **AI-reviewed:** review assistance only. Does not move a PR into the
-  ADR-0011 AI-authored cohort.
-- **Not in scope:** scraping IDE telemetry, vendor “AI usage” dashboards, or
-  estimating % of lines by tool.
+Ship a reusable workflow in `aeroflow-workflows` (for example
+`label-ai-assistance.yml`) called from golden-path repos. Trigger on
+`pull_request` types: `opened`, `edited`, `synchronize`, `ready_for_review`,
+`reopened`, and on `issue_comment` (for override commands).
 
-### Auditability
+#### Detection signals (precedence, highest first)
 
-- **Who can set/change:** anyone with write on the repo (the squad). Labels are
-  not restricted to admins — friction kills honesty.
-- **History:** GitHub’s PR timeline records label add/remove with actor and
-  timestamp. That is the audit log; we do not duplicate it.
-- **Metric snapshot:** ADR-0011 jobs read labels **at merge time** (or on the
-  merged PR object). Post-merge label edits do not rewrite published weekly
-  artefacts; a later correction is a note, not a silent rewrite.
-- **Enforcement (phased, light):**
-  - Phase A: documentation + template only.
-  - Phase B: non-blocking workflow check — warn when ready-for-review and
-    undeclared.
-  - Phase C (optional): repository ruleset or required check that blocks merge
-    until one declaration exists. Adopt only if honesty holds and reminders
-    are ignored; do not start here — a hard gate teaches people to tick
-    “Neither” blindly.
+When deciding what to apply, evaluate in this order and **stop at the first
+decisive band**:
 
-Org labels are created once (description matching the table) and reused across
-repos so queries stay uniform.
+1. **Manual override / human lock (highest)**  
+   - PR already has labels last touched by a human (not `github-actions[bot]` /
+     the platform bot), **or**  
+   - sticky comment state `ai-label:manual`, **or**  
+   - slash command handled this PR (see below).  
+   Automation **must not** change `ai-authored` / `ai-reviewed` /
+   `ai-declaration:none` while locked. It may still remind if nothing is
+   declared and the lock only removed content labels.
+
+2. **Explicit PR body markers**  
+   - Template checkboxes ticked, or HTML/markdown markers such as
+     `<!-- ai-label: authored -->`, `<!-- ai-label: reviewed -->`,
+     `<!-- ai-label: none -->`.  
+   - Decisive for apply/remove of the matching content label(s).
+
+3. **Commit trailers on commits reachable from the PR head**  
+   - `Ai-Assisted: authored` → `ai-authored`  
+   - `Ai-Assisted: reviewed` → `ai-reviewed`  
+   - `Ai-Assisted: none` → `ai-declaration:none`  
+   - If both authored and reviewed trailers appear across commits, apply both
+     content labels (and clear `none`).
+
+4. **Known AI co-author trailers (authored only)**  
+   - `Co-Authored-By` lines matching a small, reviewed allow-list of AI/agent
+     identities published in the handbook (for example coding-agent bots we
+     actually use).  
+   - Maps to `ai-authored` only. Do **not** guess from Dependabot or ordinary
+     human co-authors.
+
+5. **No signal**  
+   - Apply nothing. In Phase B+, post a non-blocking reminder when the PR is
+     `ready_for_review` and undeclared.
+
+**Out of scope for v1 (not realistic enough to trust):** scraping IDE
+telemetry, vendor “% AI” dashboards, or inferring authorship from Copilot
+suggestion acceptance. Revisit as a new signal band only when a tool we use
+exposes a **merge-correlated, documented** API and we can place it in this
+list with a false-positive story.
+
+#### What the bot does when it auto-applies
+
+1. Add/remove the content label(s) per precedence.
+2. Add `ai-label:auto` if it applied `ai-authored` or `ai-reviewed`.
+3. Post (or update) a single sticky comment naming **which signal won**, for
+   example: “Applied `ai-authored` from commit trailer `Ai-Assisted: authored`
+   on `abc1234`. This is auto-labelled (`ai-label:auto`).”
+4. Never invent labels from weak or ambiguous evidence — skip and remind.
+
+#### Manual override (auditable)
+
+Any author or reviewer with write access can:
+
+| Action | Effect | Audit |
+|--------|--------|--------|
+| Change labels in the UI | Sets **manual lock**; bot stops overwriting content labels | GitHub timeline (actor ≠ bot) |
+| Comment `/ai-label authored` | Apply `ai-authored`, clear `none`, set manual lock, remove `ai-label:auto` | Comment + bot acknowledgement + timeline |
+| `/ai-label reviewed` | Same for `ai-reviewed` | Same |
+| `/ai-label both` | Both content labels | Same |
+| `/ai-label none` | `ai-declaration:none` only | Same |
+| `/ai-label clear` | Remove content + `none` + `auto`; leave undeclared | Same |
+| `/ai-label unlock` | Clear manual lock; bot may re-evaluate on next event | Same |
+
+Disputing an auto-label is the same path: correct with `/ai-label …` or the UI.
+False positives should be easy to undo; the sticky comment must say how.
+
+#### False positives and false negatives
+
+- **False positive (auto-labelled wrongly):** human overrides via UI or
+  `/ai-label`; `ai-label:auto` comes off on successful override; weekly metrics
+  use **merge-time** labels, so fix before merge.
+- **False negative (missed AI use):** Phase B reminder on undeclared
+  ready-for-review PRs; authors still responsible for honesty. We bias missing
+  toward under-count (ADR-0011), not fabrication.
+- **Squash merges:** trailers may disappear from `main`; that is why labels on
+  the **PR at merge** remain the metric source.
+
+#### Permissions (least privilege)
+
+Reusable workflow job permissions — no broader:
+
+```yaml
+permissions:
+  contents: read
+  pull-requests: write   # labels + PR comments
+```
+
+Use `GITHUB_TOKEN` (or a fine-scoped GitHub App later if org rules block
+`pull-requests: write` on the default token). **No** `contents: write`, no
+`actions: write`, no org-admin token. The workflow must not push commits or
+alter branch protection.
+
+#### Mapping onto staged enforcement
+
+| Phase | Human convention | Automation | Gate |
+|-------|------------------|------------|------|
+| **A — docs** | Template + label meanings published | Workflow not required | None |
+| **B — warn** | Same | Workflow on; auto-apply from bands 2–4; sticky reason; remind if undeclared at ready-for-review | Non-blocking check (warn annotation / comment only) |
+| **C — optional ruleset** | Same | Same + required status check “AI assistance declared” (any of `ai-authored`, `ai-reviewed`, `ai-declaration:none`) | Blocking only after Phase B shows reminders work and junk “none” ticks are rare |
+
+Do **not** start at Phase C. A hard gate teaches performative `none` ticks and
+poisons ADR-0011.
 
 ### Feed into ADR-0011
 
 For each service, rolling 4-week window on **merged** PRs:
 
-- `% ai-authored` = merges with label `ai-authored` / all merges
-- Join that cohort to median time PR open → approved and to change failure rate
-  (AI-authored vs not), exactly as ADR-0011 specifies
-- `ai-reviewed` may appear on a future panel; it does not affect the AI share
-  numerator
-
-Unlabelled merges count as **not** AI-authored. That biases the share down if
-people forget — preferable to inventing AI usage, and Phase B reminders address
-it.
+- `% ai-authored` = merges with `ai-authored` / all merges
+- Join that cohort to median time PR open → approved and to CFR (AI-authored vs
+  not)
+- Ignore `ai-label:auto` and `ai-declaration:none` in the numerator
+- Snapshot labels **at merge time**; post-merge edits do not rewrite published
+  weekly artefacts
 
 ## Consequences
 
-ADR-0011’s AI panel becomes implementable with GitHub-native data. Authors get
-a one-line habit; platform gets a stable query. Distinct labels keep “AI wrote
-this” separate from “AI helped me review.”
+ADR-0011’s AI panel becomes implementable with GitHub-native data. Automation
+raises recall without making trailers or vendor APIs the system of record.
+Overrides stay visible on the PR timeline and in bot acknowledgements.
 
-Costs: creating org labels, adding a few lines to the PR template on the golden
-path, and accepting imperfect self-reporting. A hard merge gate too early will
-produce junk data.
+Costs: implementing and owning one reusable workflow; maintaining a small
+co-author allow-list; accepting imperfect self-reporting for cases with no
+trailer or checkbox. A Phase C gate too early will produce junk declarations.
 
 ## Alternatives considered
 
@@ -126,17 +207,20 @@ breaks the ADR-0011 join. Revisit only if after two quarters nobody uses
 `ai-reviewed` and the extra label is pure noise.
 
 **Commit trailer as sole source of truth.** Rejected. Awkward under squash
-merge; hard to query at PR grain; easy to omit on fixup commits. Revisit if the
-estate standardises on merge commits and trailers are enforced in CI — still
-pair with a PR label for dashboards.
+merge; hard to query at PR grain; easy to omit on fixup commits. Kept only as
+detection band 3. Revisit if the estate standardises on merge commits and
+trailers are enforced in CI — still pair with a PR label for dashboards.
 
 **PR template checkbox without labels.** Rejected. Checkboxes in markdown are
-weak to query and easy to edit without timeline clarity. Revisit never as the
-metric source; keep them only as the prompt that drives labels.
+weak to query and easy to edit without timeline clarity. Kept as the author
+prompt and as detection band 2.
 
-**IDE / vendor telemetry.** Rejected at squad-of-six scale: another product,
-privacy theatre, and weak join to merge outcomes. Revisit if a paid seat must
-be justified with vendor stats — still keep GitHub labels for the delivery join.
+**IDE / vendor telemetry as auto-label source.** Rejected at squad-of-six scale
+for v1. Revisit as a new precedence band only with a documented,
+merge-correlated API and an explicit false-positive path.
 
-**Required ruleset from day one.** Rejected. Forces performative “Neither”
-ticks. Revisit after Phase B if undeclared ready-for-review PRs stay common.
+**Required ruleset from day one.** Rejected. Forces performative `none` ticks.
+Revisit as Phase C after Phase B evidence.
+
+**Bot always overwrites human labels.** Rejected. Destroys trust and audit.
+Manual lock (band 1) is mandatory once a human has set intent.
