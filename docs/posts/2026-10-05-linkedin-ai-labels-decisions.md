@@ -27,6 +27,6 @@ My honest verdict is a marginal yes. A small event-time check is worth having; p
 
 How are you handling this: paying for telemetry, or trusting a checkbox?
 
-The decision and the change: https://github.com/aeroflow-air/platform-handbook/pull/41
+The decision and the change: [https://github.com/aeroflow-air/platform-handbook/pull/41](https://github.com/aeroflow-air/platform-handbook/blob/main/docs/decisions/0012-ai-assisted-pr-labelling.md)
 
 #PlatformEngineering #DevEx #DORA
