@@ -75,46 +75,52 @@ Ship a reusable workflow in `aeroflow-workflows` (for example
 #### Detection signals (precedence, highest first)
 
 When deciding what to apply, evaluate in this order and **stop at the first
-decisive band**:
+decisive band**. Implementation: reusable workflow
+`aeroflow-workflows/.github/workflows/label-ai-assistance.yml` and
+`scripts/label_ai_assistance.py`.
 
 1. **Manual override / human lock (highest)**  
-   - PR already has labels last touched by a human (not `github-actions[bot]` /
-     the platform bot), **or**  
-   - sticky comment state `ai-label:manual`, **or**  
-   - slash command handled this PR (see below).  
-   Automation **must not** change `ai-authored` / `ai-reviewed` /
-   `ai-declaration:none` while locked. It may still remind if nothing is
-   declared and the lock only removed content labels.
+   - Label `ai-label:manual`, **or**  
+   - slash command `/ai-label …` on the PR.  
+   Automation **must not** change content labels while locked.
 
 2. **Explicit PR body markers**  
-   - Template checkboxes ticked, or HTML/markdown markers such as
-     `<!-- ai-label: authored -->`, `<!-- ai-label: reviewed -->`,
-     `<!-- ai-label: none -->`.  
-   - Decisive for apply/remove of the matching content label(s).
+   - Template checkboxes, or `<!-- ai-label: authored|reviewed|none -->`.  
+   - Human declaration; not marked `ai-label:auto`.
 
-3. **Commit trailers on commits reachable from the PR head**  
-   - `Ai-Assisted: authored` → `ai-authored`  
-   - `Ai-Assisted: reviewed` → `ai-reviewed`  
-   - `Ai-Assisted: none` → `ai-declaration:none`  
-   - If both authored and reviewed trailers appear across commits, apply both
-     content labels (and clear `none`).
+3. **Joinable tool telemetry (preferred over trailers)**  
+   - **Copilot cloud agent:** PR author login is a known Copilot agent
+     identity (`Copilot`, `copilot-swe-agent[bot]`, …). GitHub-native; no
+     metrics API. → `ai-authored` + `ai-label:auto`.  
+   - **Cursor AI Code Tracking** (Enterprise, alpha): per-commit SHA metrics
+     joined to PR commits
+     ([docs](https://cursor.com/docs/account/teams/ai-code-tracking-api)).
+     Uses line shares only — **user identity fields are stripped** before
+     storage (ADR-0011). Optional secret `CURSOR_API_KEY`; if unset, this
+     sub-band is skipped. → `ai-authored` + `ai-label:auto` when thresholds
+     match.
 
-4. **Known AI co-author trailers (authored only)**  
-   - `Co-Authored-By` lines matching a small, reviewed allow-list of AI/agent
-     identities published in the handbook (for example coding-agent bots we
-     actually use).  
-   - Maps to `ai-authored` only. Do **not** guess from Dependabot or ordinary
-     human co-authors.
+4. **Commit trailers (fallback)**  
+   - `Ai-Assisted: authored|reviewed|none` on commits reachable from the PR
+     head. Used when band 3 has no data.
 
-5. **No signal**  
-   - Apply nothing. In Phase B+, post a non-blocking reminder when the PR is
-     `ready_for_review` and undeclared.
+5. **Known AI co-author trailers (fallback)**  
+   - `Co-Authored-By` matching the AI agent allow-list. Not Dependabot.
 
-**Out of scope for v1 (not realistic enough to trust):** scraping IDE
-telemetry, vendor “% AI” dashboards, or inferring authorship from Copilot
-suggestion acceptance. Revisit as a new signal band only when a tool we use
-exposes a **merge-correlated, documented** API and we can place it in this
-list with a false-positive story.
+6. **No signal**  
+   - Phase B+: non-blocking reminder when `ready_for_review` and undeclared.
+
+**Explicitly not used for labelling** (aggregate / per-user only — cannot
+tie to a PR id or commit SHA):
+
+- GitHub Copilot Usage Metrics API
+  ([reference](https://docs.github.com/en/copilot/reference/copilot-usage-metrics/copilot-usage-metrics))
+- Claude Code Analytics API
+  ([docs](https://platform.claude.com/docs/en/manage-claude/claude-code-analytics-api))
+- Windsurf Enterprise Analytics
+
+Those feeds may still inform **org-level** ADR-0011 dashboards; they must not
+drive `ai-authored` on an individual pull request.
 
 #### What the bot does when it auto-applies
 
@@ -215,9 +221,11 @@ trailers are enforced in CI — still pair with a PR label for dashboards.
 weak to query and easy to edit without timeline clarity. Kept as the author
 prompt and as detection band 2.
 
-**IDE / vendor telemetry as auto-label source.** Rejected at squad-of-six scale
-for v1. Revisit as a new precedence band only with a documented,
-merge-correlated API and an explicit false-positive path.
+**IDE / vendor telemetry without PR or commit join.** Rejected for labelling.
+Copilot Usage Metrics, Claude Code Analytics, and Windsurf Analytics stay
+dashboard-only. Cursor AI Code Tracking (commit SHA) and Copilot cloud-agent
+authorship are the documented exceptions under band 3. Revisit other vendors
+only with merge-correlated identifiers and a false-positive path.
 
 **Required ruleset from day one.** Rejected. Forces performative `none` ticks.
 Revisit as Phase C after Phase B evidence.
