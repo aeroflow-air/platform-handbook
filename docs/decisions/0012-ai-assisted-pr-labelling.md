@@ -27,116 +27,165 @@ edited the change**, and **AI that only helped review**. ADR-0011’s join to
 review time and CFR is about authoring, not review tooling — so the labels must
 distinguish them.
 
+A later impulse was to auto-apply labels from vendor usage APIs (Cursor AI Code
+Tracking, Copilot usage metrics, Claude Code analytics, and similar). Those
+paths either need **paid Enterprise seats**, return **aggregate / per-user
+data that cannot join to a PR**, or both. **No additional cost is allowed for
+this portfolio**, so paid and Enterprise-only APIs are out of scope. The only
+new automated signal that stays zero-cost and GitHub-native is detecting when
+**Copilot’s cloud agent authored the pull request**.
+
 ## Decision
 
 **Source of truth for metrics: GitHub PR labels, applied before merge.** Authors
-are prompted by a PR template checkbox; automation may sync or remind; commit
-trailers are optional and never the metric source.
+are prompted by a PR template checkbox. Automation may apply labels from
+**zero-cost signals only**. Commit trailers remain a detection input, not the
+metric store.
 
 ### Labels (org-standard)
 
 | Label | Means | Counts for ADR-0011 AI share |
 |-------|--------|------------------------------|
-| `ai-authored` | A **substantial** share of the diff was AI-generated or AI-edited (Copilot, ChatGPT, Cursor, agents, etc.). “Substantial” is author judgement: more than trivial autocomplete. | **Yes** — this is the cohort |
-| `ai-reviewed` | AI was used in **review** (summary, suggested comments, risk scan) but did not author the change. | **No** — tracked separately later if useful |
-| *(neither)* | No meaningful AI involvement, or author declines to claim it. | Counts as not AI-authored |
+| `ai-authored` | A **substantial** share of the diff was AI-generated or AI-edited. “Substantial” is author judgement: more than trivial autocomplete. | **Yes** — this is the cohort |
+| `ai-reviewed` | AI was used in **review** only. | **No** — tracked separately later if useful |
+| `ai-declaration:none` | Author explicitly asserts neither. | Counts as not AI-authored |
+| `ai-label:auto` | At least one content label was applied by automation. | Meta only — ignored by metrics |
+| `ai-label:manual` | Human lock; automation must not overwrite content labels. | Meta only |
 
-Do **not** use a vague `ai-assisted` umbrella once this record is accepted — it
-collapses the two meanings ADR-0011 needs to keep apart. Prefer exactly one of
-`ai-authored` or `ai-reviewed` when only one applies; both may appear if AI both
-wrote and reviewed.
+Do **not** use a vague `ai-assisted` umbrella once this record is accepted.
 
-### How authors and bots mark
+### How authors mark (human path)
 
-1. **PR template** (golden path + handbook): a short checklist:
-   - [ ] `ai-authored` — substantial AI-generated or AI-edited code
-   - [ ] `ai-reviewed` — AI used only in review
-   - [ ] Neither
-2. **Author** (or the opening bot) applies the matching label(s) when opening or
-   before ready-for-review. Self-marking is enough at this scale.
-3. **Optional automation** (later, in `aeroflow-workflows`):
-   - Reminder comment if the PR is `ready for review` and has none of the three
-     declarations (no label and checklist unchecked).
-   - Sync: if the template checkbox is ticked and the label is missing, apply
-     the label (and vice versa for untick → remove, only while open).
-4. **Commit trailer** `Ai-Assisted: authored|reviewed` is **optional** for
-   people who prefer git-native notes. CI may *suggest* a label from trailers
-   on the PR’s commits; it must **not** be the only signal (squash merges drop
-   or rewrite trailers; metrics query PRs, not commit graphs).
+1. **PR template** checklist: `ai-authored` / `ai-reviewed` / Neither.
+2. **Author** applies matching label(s), or ticks Neither
+   (`ai-declaration:none` when synced).
+3. **Optional trailer** `Ai-Assisted: authored|reviewed|none` — fallback input
+   for automation, not the dashboard query.
 
-### What counts
+### Zero-cost automation (Copilot cloud agent only)
 
-- **AI-authored:** model-produced or heavily model-edited code, config, tests,
-  or docs that land in the merge. Human-written code with light autocomplete
-  does not need the label.
-- **AI-reviewed:** review assistance only. Does not move a PR into the
-  ADR-0011 AI-authored cohort.
-- **Not in scope:** scraping IDE telemetry, vendor “AI usage” dashboards, or
-  estimating % of lines by tool.
+**New automated source:** if the pull request’s GitHub **author** (and, where
+exposed on the event, the **actor** that opened it) matches a small allow-list
+of Copilot cloud-agent identities — for example `Copilot`,
+`copilot-swe-agent[bot]`, `github-copilot[bot]` — treat the PR as
+`ai-authored`, set `ai-label:auto`, and sticky-comment the reason.
 
-### Auditability
+**What this free signal can detect**
 
-- **Who can set/change:** anyone with write on the repo (the squad). Labels are
-  not restricted to admins — friction kills honesty.
-- **History:** GitHub’s PR timeline records label add/remove with actor and
-  timestamp. That is the audit log; we do not duplicate it.
-- **Metric snapshot:** ADR-0011 jobs read labels **at merge time** (or on the
-  merged PR object). Post-merge label edits do not rewrite published weekly
-  artefacts; a later correction is a note, not a silent rewrite.
-- **Enforcement (phased, light):**
-  - Phase A: documentation + template only.
-  - Phase B: non-blocking workflow check — warn when ready-for-review and
-    undeclared.
-  - Phase C (optional): repository ruleset or required check that blocks merge
-    until one declaration exists. Adopt only if honesty holds and reminders
-    are ignored; do not start here — a hard gate teaches people to tick
-    “Neither” blindly.
+- PRs **opened by** Copilot cloud agent (agent-created branches / agent PRs).
 
-Org labels are created once (description matching the table) and reused across
-repos so queries stay uniform.
+**What it cannot detect**
+
+- Human-authored PRs where Copilot, Cursor, Claude Code, or chat only helped
+  in the IDE.
+- Copilot code review on a human PR (`ai-reviewed` still needs a human mark or
+  a future free signal — none exists today without paid APIs).
+- “Substantial” AI edits inside a human’s commits.
+
+So coverage is **narrow**: agent-opened PRs only. Most AI-assisted day-to-day
+work still depends on template, trailers, or honest self-labelling.
+
+**Nightly collector:** **not needed.** Author/actor is available on
+`pull_request` (and related) events. An event-time check in a label workflow is
+enough. No secrets, no vendor poll, no cache job.
+
+**Paid / Enterprise APIs:** do **not** integrate Cursor AI Code Tracking,
+Copilot Usage Metrics API, Claude Code Analytics, Windsurf Analytics, or any
+other paid usage export for labelling. Draft implementation that assumed
+`CURSOR_API_KEY` is abandoned.
+
+### Detection precedence (highest first)
+
+Stop at the first decisive band:
+
+1. **Manual lock / slash override** — `ai-label:manual` or `/ai-label …`.
+2. **PR body markers** — template checkboxes or
+   `<!-- ai-label: authored|reviewed|none -->` (human declaration; not auto).
+3. **Copilot cloud-agent author/actor** — zero-cost GitHub-native →
+   `ai-authored` + `ai-label:auto`.
+4. **Commit trailers** — `Ai-Assisted: …` (fallback).
+5. **Co-Authored-By allow-list** — known AI agents only; not Dependabot
+   (fallback).
+6. **No signal** — Phase B may remind when ready-for-review and undeclared;
+   still non-blocking.
+
+### Aggregate-only vendor sources
+
+Copilot Usage Metrics, Claude Code Analytics, and Windsurf Analytics cannot
+tie usage to a PR id or commit SHA. Treat them as:
+
+- **Out of labelling** entirely.
+- **Out of ADR-0011 delivery metrics** unless already free under a licence we
+  already pay for **and** consumed only as **org/team aggregates** (never
+  per-person charts). Today AeroFlow should **leave them out** rather than
+  add seats or admin keys for dashboards.
+
+### Worth building? (honest assessment)
+
+**Marginal yes for a tiny change; no for a platform product.**
+
+Extending automation with Copilot-agent author detection is a small,
+zero-secret branch on the event-time label workflow already sketched for
+trailers and body markers. It correctly tags a real, growing class of PRs and
+keeps ADR-0011’s AI share from under-counting agent work.
+
+It does **not** solve IDE-assisted human PRs. Building collectors, Enterprise
+keys, or multi-vendor joins for that gap is **not worth it** under the
+no-extra-cost rule — coverage would still be incomplete without human honesty.
+
+**Recommendation:** when (and only when) the Phase B label workflow is built,
+add Copilot-agent author/actor as band 3 alongside trailers and co-authors.
+Do **not** build a nightly job, Cursor integration, or aggregate-API pipelines
+for labelling. Rely on the PR template for everything the free signal misses.
+
+### Auditability and enforcement
+
+Unchanged in spirit: GitHub timeline for label changes; `/ai-label` overrides
+are auditable; metrics snapshot labels **at merge time**. Phased enforcement
+A (docs) → B (warn) → C (optional ruleset) still applies — do not start at C.
+
+Permissions for any future workflow stay least-privilege: `contents: read`,
+`pull-requests: write`. No vendor secrets.
 
 ### Feed into ADR-0011
 
-For each service, rolling 4-week window on **merged** PRs:
-
-- `% ai-authored` = merges with label `ai-authored` / all merges
-- Join that cohort to median time PR open → approved and to change failure rate
-  (AI-authored vs not), exactly as ADR-0011 specifies
-- `ai-reviewed` may appear on a future panel; it does not affect the AI share
-  numerator
-
-Unlabelled merges count as **not** AI-authored. That biases the share down if
-people forget — preferable to inventing AI usage, and Phase B reminders address
-it.
+Unchanged: `% ai-authored` on merged PRs; join to review time and CFR;
+ignore meta labels; under-count if undeclared rather than invent usage.
 
 ## Consequences
 
-ADR-0011’s AI panel becomes implementable with GitHub-native data. Authors get
-a one-line habit; platform gets a stable query. Distinct labels keep “AI wrote
-this” separate from “AI helped me review.”
+Labelling stays affordable and GitHub-native. Agent-authored PRs can be
+auto-tagged without new spend. Most AI-assisted human work remains a trust-
+and-template problem — which matches a squad of six better than Enterprise
+telemetry theatre.
 
-Costs: creating org labels, adding a few lines to the PR template on the golden
-path, and accepting imperfect self-reporting. A hard merge gate too early will
-produce junk data.
+Costs: maintaining a short Copilot-agent login allow-list; accepting narrow
+auto-coverage. What we give up: automated detection of IDE AI on human PRs
+without paid APIs.
 
 ## Alternatives considered
 
-**Single `ai-assisted` label only.** Rejected. Collapses authoring and review;
-breaks the ADR-0011 join. Revisit only if after two quarters nobody uses
-`ai-reviewed` and the extra label is pure noise.
+**Cursor AI Code Tracking / other paid Enterprise usage APIs for labelling.**
+Rejected. Additional cost and/or Enterprise lock-in. Revisit only if the org
+already has the seat for other reasons **and** the API joins to commit SHA or
+PR id without per-person surveillance dashboards.
 
-**Commit trailer as sole source of truth.** Rejected. Awkward under squash
-merge; hard to query at PR grain; easy to omit on fixup commits. Revisit if the
-estate standardises on merge commits and trailers are enforced in CI — still
-pair with a PR label for dashboards.
+**Copilot Usage Metrics / Claude Code / Windsurf for labelling.** Rejected.
+Aggregate or per-user/day only — cannot attribute to a PR. Revisit never for
+labels; optional org-only ADR-0011 context only if already free.
 
-**PR template checkbox without labels.** Rejected. Checkboxes in markdown are
-weak to query and easy to edit without timeline clarity. Revisit never as the
-metric source; keep them only as the prompt that drives labels.
+**Nightly collector for agent authorship.** Rejected. Event-time author/actor
+is sufficient. Revisit only if GitHub stops exposing author on PR events
+(unlikely).
 
-**IDE / vendor telemetry.** Rejected at squad-of-six scale: another product,
-privacy theatre, and weak join to merge outcomes. Revisit if a paid seat must
-be justified with vendor stats — still keep GitHub labels for the delivery join.
+**Single `ai-assisted` label.** Rejected. Collapses authoring and review.
 
-**Required ruleset from day one.** Rejected. Forces performative “Neither”
-ticks. Revisit after Phase B if undeclared ready-for-review PRs stay common.
+**Commit trailer as sole source of truth.** Rejected. Squash-merge and query
+pain; kept as fallback band 4.
+
+**Required ruleset from day one.** Rejected. Performative `none` ticks.
+Revisit as Phase C after Phase B evidence.
+
+**Build nothing automated at all.** Acceptable interim. The template and
+manual labels already satisfy ADR-0011 if people use them. Automating only
+Copilot-agent authorship is a small optional improvement, not a prerequisite.
