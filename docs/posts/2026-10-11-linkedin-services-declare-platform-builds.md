@@ -7,7 +7,7 @@
 | **Status** | draft, not yet published |
 | **Related** | [Design: workload manifest platform](../design/workload-manifest-platform.md), [ADR-0009](../decisions/0009-workload-manifest.md), [ADR-0006](../decisions/0006-governed-bicep-modules-only.md), [blog post PR (site-customer #21)](https://github.com/aeroflow-air/site-customer/pull/21) |
 
-**LinkedIn post:** <!-- TODO: replace with the LinkedIn post URL once published -->
+**LinkedIn post:** [Published 11 Oct 2026](https://lnkd.in/p/efgTZbbU)
 
 ---
 
