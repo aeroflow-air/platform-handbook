@@ -59,15 +59,18 @@ flowchart LR
 | --- | --- | --- | --- | --- | --- |
 | flight-simulator | local tool (aeroflow-local) | none | `flight-events` | none | [aeroflow-local README](https://github.com/aeroflow-air/aeroflow-local) |
 | [svc-gate-allocation](https://github.com/aeroflow-air/svc-gate-allocation) | real | `flight-events` / `gate-allocation` | `gate-events` | gates and allocations, Scalar | `docs/service.md` |
-| [svc-flight-status](https://github.com/aeroflow-air/svc-flight-status) | real | `flight-events` / `flight-status` | none | flight lookup, departures board, manual events, Scalar | `docs/service.md` |
-| [svc-baggage-reclaim](https://github.com/aeroflow-air/svc-baggage-reclaim) | real | `flight-events` / `baggage-reclaim` | `baggage-events` | `/health` only (API is #69) | `docs/service.md` |
+| [svc-flight-status](https://github.com/aeroflow-air/svc-flight-status) | real | `flight-events` / `flight-status` | none | flight lookup, departures and arrivals boards, manual events, Scalar | `docs/service.md` |
+| [svc-baggage-reclaim](https://github.com/aeroflow-air/svc-baggage-reclaim) | real | `flight-events` / `baggage-reclaim` | `baggage-events` | `GET /belts` (rest of the API is #69) | `docs/service.md` |
 | svc-turnaround, svc-cleaning, svc-catering, svc-pushback, svc-terminal | placeholder (aeroflow-local `src/placeholders`) | `flight-events` / own name | none | `/ping` | none; they log what they receive |
-| ops-dashboard | real (aeroflow-local Blazor Server) | `flight-events`, `gate-events`, `baggage-events` / `ops-dashboard` | none | live board, gates, belts, event stream, health strip | #53 |
+| ops-dashboard | real (aeroflow-local Blazor Server) | `flight-events`, `gate-events`, `baggage-events` / `ops-dashboard` | none | live board, gates, belts, event stream, health strip; reads the three services' APIs on startup (#74) | #53 |
 
 All three real services keep state **in memory** and lose it on restart. Each
 processes one message at a time (`MaxConcurrentCalls = 1`) with manual
 completion. The ops dashboard holds an immutable in-memory `AirportView` and
-re-renders when listeners apply events.
+re-renders when listeners apply events. On startup (and on its Refresh button) it
+first loads flights, gates and belts from the services' read APIs through service
+discovery, so a restart doesn't show an empty airport. Events then win over that
+snapshot, and a service that is down is retried and named in the top bar (#74).
 
 ## Topics and subscriptions
 
@@ -217,7 +220,8 @@ the default settings.
   the bus.
 - **Restart loses state** in every service and the dashboard, and the simulator
   restarts its sequence, so after restarting one service it sees events for
-  flights it never saw scheduled. Initial API hydrate is still #74.
+  flights it never saw scheduled. The dashboard reloads what the services still
+  hold from their APIs (#74), but if a service restarted too, that state is gone.
 - **Unread subscriptions grow**: `local-dev` still has no reader.
 
 ## Known gaps
@@ -228,9 +232,8 @@ the default settings.
 | Event contracts are local copies in each service (`FlightEventMessage`, gate and baggage copies in the dashboard) | a change to the simulator can silently break consumers (dead letters) | [#71](https://github.com/aeroflow-air/platform-handbook/issues/71) |
 | `workload.yaml` cannot declare topics or subscriptions | the paved road cannot provision the bus; everything above exists only in the AppHost | [#64](https://github.com/aeroflow-air/platform-handbook/issues/64) |
 | Gate allocation ignores arrivals; every turn is aircraft size C | no gates for inbound aircraft | |
-| Baggage reclaim API | no way to query belts and bags yet | [#69](https://github.com/aeroflow-air/platform-handbook/issues/69) |
-| Ops dashboard initial state from APIs | after restart the view starts empty until new events arrive | [#74](https://github.com/aeroflow-air/platform-handbook/issues/74) |
-| Richer board / journey UI | flash on change, closed gates, arrivals API, stream filter, flight journey | [#75](https://github.com/aeroflow-air/platform-handbook/issues/75), [#76](https://github.com/aeroflow-air/platform-handbook/issues/76), [#78](https://github.com/aeroflow-air/platform-handbook/issues/78) |
+| Baggage reclaim API | only `GET /belts`; no single belt, flight reclaim or bag lookup yet | [#69](https://github.com/aeroflow-air/platform-handbook/issues/69) |
+| Richer board / journey UI | flash on change, closed gates, stream filter, flight journey | [#75](https://github.com/aeroflow-air/platform-handbook/issues/75), [#76](https://github.com/aeroflow-air/platform-handbook/issues/76) |
 | State in memory only | everything resets on restart | |
 | Keycloak not enforced | services get the reference but accept anonymous calls | |
 
