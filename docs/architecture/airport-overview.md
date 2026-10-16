@@ -60,7 +60,7 @@ flowchart LR
 | flight-simulator | local tool (aeroflow-local) | none | `flight-events` | none | [aeroflow-local README](https://github.com/aeroflow-air/aeroflow-local) |
 | [svc-gate-allocation](https://github.com/aeroflow-air/svc-gate-allocation) | real | `flight-events` / `gate-allocation` | `gate-events` | gates and allocations, Scalar | `docs/service.md` |
 | [svc-flight-status](https://github.com/aeroflow-air/svc-flight-status) | real | `flight-events` / `flight-status` | none | flight lookup, departures and arrivals boards, manual events, Scalar | `docs/service.md` |
-| [svc-baggage-reclaim](https://github.com/aeroflow-air/svc-baggage-reclaim) | real | `flight-events` / `baggage-reclaim` | `baggage-events` | `GET /belts` (rest of the API is #69) | `docs/service.md` |
+| [svc-baggage-reclaim](https://github.com/aeroflow-air/svc-baggage-reclaim) | real | `flight-events` / `baggage-reclaim` | `baggage-events` | `GET /belts`, `/belts/{id}`, `/flights/{flightId}/reclaim`, `/bags/{bagTag}` (read-only, #69) | `docs/service.md` |
 | svc-turnaround, svc-cleaning, svc-catering, svc-pushback, svc-terminal | placeholder (aeroflow-local `src/placeholders`) | `flight-events` / own name | none | `/ping` | none; they log what they receive |
 | ops-dashboard | real (aeroflow-local Blazor Server) | `flight-events`, `gate-events`, `baggage-events` / `ops-dashboard` | none | live board, gates, belts, event stream, health strip; reads the three services' APIs on startup (#74) | #53 |
 
