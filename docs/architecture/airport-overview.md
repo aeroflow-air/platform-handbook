@@ -209,6 +209,12 @@ the default settings.
   on domain rules to reject repeats (`already_allocated`, `invalid_transition`),
   which shows up as warnings, not duplicates. The ops dashboard de-duplicates on
   `EventId` in its projector.
+- **Publishing is reliable** ([ADR-0017](../decisions/0017-reliable-event-publishing.md)).
+  Gate allocation and baggage reclaim save outgoing events in the same atomic
+  store update as the change (an outbox), and an `OutboxDispatcher` sends them
+  in order, retrying until the bus accepts them. Event ids are deterministic, and
+  every topic has duplicate detection on, so a re-send is dropped by the bus or
+  by the consumer.
 - **Business rejections are completed, not retried.** They are logged as
   warnings such as `no_gate_available` once the six open demo gates are full,
   or `flight_not_found` for flights scheduled before a service started.
