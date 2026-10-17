@@ -235,7 +235,7 @@ the default settings.
 | Gap | Effect | Tracked |
 | --- | --- | --- |
 | Placeholder gate `TBA` | flight status invents it at `Boarding` so the domain rule "boarding needs a gate" passes; it does not subscribe to `gate-events` yet | follow-on to #77 |
-| Event contracts are local copies in each service (`FlightEventMessage`, gate and baggage copies in the dashboard) | a change to the simulator can silently break consumers (dead letters) | [#71](https://github.com/aeroflow-air/platform-handbook/issues/71) |
+| Event contracts are local copies in each service (`FlightEventMessage`, gate and baggage copies in the dashboard) | decided in ADR-0019 (producer-owned contracts, copies pinned by contract tests); the contract tests do not exist yet, so a producer change can still break consumers silently (dead letters) | [ADR-0019](../decisions/0019-event-contracts-and-topic-ownership.md), [#71](https://github.com/aeroflow-air/platform-handbook/issues/71) |
 | `workload.yaml` cannot declare topics or subscriptions | the paved road cannot provision the bus; everything above exists only in the AppHost | [#64](https://github.com/aeroflow-air/platform-handbook/issues/64) |
 | Gate allocation ignores arrivals; every turn is aircraft size C | no gates for inbound aircraft | |
 | Baggage reclaim API | only `GET /belts`; no single belt, flight reclaim or bag lookup yet | [#69](https://github.com/aeroflow-air/platform-handbook/issues/69) |
@@ -252,6 +252,7 @@ the default settings.
 - [ADR-0014 .NET Aspire for local development](../decisions/0014-aspire-local-development.md) (draft)
 - [ADR-0015 API documentation with OpenAPI and Scalar](../decisions/0015-api-documentation-openapi-scalar.md) (draft)
 - [ADR-0018 Authentication and authorisation with Entra ID app roles](../decisions/0018-entra-id-authentication-authorisation.md) (draft): per-service JWT validation, fake auth handler locally; first write endpoint is svc-baggage-reclaim#9.
+- [ADR-0019 Event contracts and topic ownership](../decisions/0019-event-contracts-and-topic-ownership.md) (draft): producer owns each `<domain>-events` contract, consumers copy with contract tests, additive-first evolution; `workload.yaml` `events:` declaration designed for #64.
 - [Service docs standard](../standards/service-docs.md)
 
 Keep this page current: a PR that adds a topic, a subscription or a service
