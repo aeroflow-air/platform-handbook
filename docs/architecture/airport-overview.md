@@ -241,7 +241,7 @@ the default settings.
 | Baggage reclaim API | only `GET /belts`; no single belt, flight reclaim or bag lookup yet | [#69](https://github.com/aeroflow-air/platform-handbook/issues/69) |
 | Richer board / journey UI | flash on change, closed gates, stream filter, flight journey | [#75](https://github.com/aeroflow-air/platform-handbook/issues/75), [#76](https://github.com/aeroflow-air/platform-handbook/issues/76) |
 | State in memory only | everything resets on restart | |
-| Keycloak not enforced | services get the reference but accept anonymous calls | |
+| Entra ID auth not enforced yet | services accept anonymous calls; ADR-0018 decides Entra ID app roles with a local fake auth handler, first applied to the baggage reclaim write endpoint | [ADR-0018](../decisions/0018-entra-id-authentication-authorisation.md), svc-baggage-reclaim#9 |
 
 ## Decisions this rests on
 
@@ -251,6 +251,7 @@ the default settings.
 - [ADR-0013 Central event bus](../decisions/0013-central-event-bus.md) (draft): one topic per owning service.
 - [ADR-0014 .NET Aspire for local development](../decisions/0014-aspire-local-development.md) (draft)
 - [ADR-0015 API documentation with OpenAPI and Scalar](../decisions/0015-api-documentation-openapi-scalar.md) (draft)
+- [ADR-0018 Authentication and authorisation with Entra ID app roles](../decisions/0018-entra-id-authentication-authorisation.md) (draft): per-service JWT validation, fake auth handler locally; first write endpoint is svc-baggage-reclaim#9.
 - [Service docs standard](../standards/service-docs.md)
 
 Keep this page current: a PR that adds a topic, a subscription or a service
