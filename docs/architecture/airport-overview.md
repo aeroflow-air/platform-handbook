@@ -60,9 +60,9 @@ flowchart LR
 | flight-simulator | local tool (aeroflow-local) | none | `flight-events` | none | [aeroflow-local README](https://github.com/aeroflow-air/aeroflow-local) |
 | [svc-gate-allocation](https://github.com/aeroflow-air/svc-gate-allocation) | real | `flight-events` / `gate-allocation` | `gate-events` | gates and allocations, Scalar | `docs/service.md` |
 | [svc-flight-status](https://github.com/aeroflow-air/svc-flight-status) | real | `flight-events` / `flight-status` | none | flight lookup, departures and arrivals boards, manual events, Scalar | `docs/service.md` |
-| [svc-baggage-reclaim](https://github.com/aeroflow-air/svc-baggage-reclaim) | real | `flight-events` / `baggage-reclaim` | `baggage-events` | `GET /belts`, `/belts/{id}`, `/flights/{flightId}/reclaim`, `/bags/{bagTag}` (read-only, #69) | `docs/service.md` |
+| [svc-baggage-reclaim](https://github.com/aeroflow-air/svc-baggage-reclaim) | real | `flight-events` / `baggage-reclaim` | `baggage-events` | `GET /belts`, `/belts/{id}`, `/flights/{flightId}/reclaim`, `/bags/{bagTag}` (#69) and `POST /flights/{flightId}/reclaim/complete` behind `Ops.Reclaim.Write` (svc-baggage-reclaim#9) | `docs/service.md` |
 | svc-turnaround, svc-cleaning, svc-catering, svc-pushback, svc-terminal | placeholder (aeroflow-local `src/placeholders`) | `flight-events` / own name | none | `/ping` | none; they log what they receive |
-| ops-dashboard | real (aeroflow-local Blazor Server) | `flight-events`, `gate-events`, `baggage-events` / `ops-dashboard` | none | live board, gates, belts, event stream, health strip; reads the three services' APIs on startup (#74) | #53 |
+| ops-dashboard | real (aeroflow-local Blazor Server) | `flight-events`, `gate-events`, `baggage-events` / `ops-dashboard` | none | live board, gates (open/closed/occupied, #75), belts with bag progress, filterable 200-event stream and per-flight journey (#76), health strip; reads the three services' APIs on startup (#74) | #53 |
 
 All three real services keep state **in memory** and lose it on restart. Each
 processes one message at a time (`MaxConcurrentCalls = 1`) with manual
@@ -238,8 +238,7 @@ the default settings.
 | Event contracts are local copies in each service (`FlightEventMessage`, gate and baggage copies in the dashboard) | decided in ADR-0019 (producer-owned contracts, copies pinned by contract tests); the contract tests do not exist yet, so a producer change can still break consumers silently (dead letters) | [ADR-0019](../decisions/0019-event-contracts-and-topic-ownership.md), [#71](https://github.com/aeroflow-air/platform-handbook/issues/71) |
 | `workload.yaml` cannot declare topics or subscriptions | the paved road cannot provision the bus; everything above exists only in the AppHost | [#64](https://github.com/aeroflow-air/platform-handbook/issues/64) |
 | Gate allocation ignores arrivals; every turn is aircraft size C | no gates for inbound aircraft | |
-| Baggage reclaim API | only `GET /belts`; no single belt, flight reclaim or bag lookup yet | [#69](https://github.com/aeroflow-air/platform-handbook/issues/69) |
-| Richer board / journey UI | flash on change, closed gates, stream filter, flight journey | [#75](https://github.com/aeroflow-air/platform-handbook/issues/75), [#76](https://github.com/aeroflow-air/platform-handbook/issues/76) |
+| Richer board UI | rows and tiles flash on change (CSS) but there is no visual distinction for snapshot-sourced vs live data beyond the startup status line | |
 | State in memory only | everything resets on restart | |
 | Entra ID auth not enforced yet | services accept anonymous calls; ADR-0018 decides Entra ID app roles with a local fake auth handler, first applied to the baggage reclaim write endpoint | [ADR-0018](../decisions/0018-entra-id-authentication-authorisation.md), svc-baggage-reclaim#9 |
 
