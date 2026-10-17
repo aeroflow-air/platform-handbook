@@ -253,6 +253,7 @@ the default settings.
 - [ADR-0015 API documentation with OpenAPI and Scalar](../decisions/0015-api-documentation-openapi-scalar.md) (draft)
 - [ADR-0018 Authentication and authorisation with Entra ID app roles](../decisions/0018-entra-id-authentication-authorisation.md) (draft): per-service JWT validation, fake auth handler locally; first write endpoint is svc-baggage-reclaim#9.
 - [ADR-0019 Event contracts and topic ownership](../decisions/0019-event-contracts-and-topic-ownership.md) (draft): producer owns each `<domain>-events` contract, consumers copy with contract tests, additive-first evolution; `workload.yaml` `events:` declaration designed for #64.
+- [ADR-0020 Advisory AI code review with a shared Claude workflow](../decisions/0020-ai-assisted-code-review.md) (draft): shared `ai-code-review.yml@v0.3.1` with thin callers, advisory/warning-only and never a merge gate; rollout to aeroflow-local, infra-platform, site-customer and this handbook still outstanding.
 - [Service docs standard](../standards/service-docs.md)
 
 Keep this page current: a PR that adds a topic, a subscription or a service
