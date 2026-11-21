@@ -13,6 +13,7 @@ Questions, or want to challenge a decision record? Start a thread in [Discussion
 
 - [The workload manifest platform](docs/design/workload-manifest-platform.md)
 - [Observability on the golden path](docs/design/observability.md) ([ADR-0022](docs/decisions/0022-observability-on-the-golden-path.md))
+- [Agent context audit and central skills](docs/design/agent-context-audit.md) ([ADR-0023](docs/decisions/0023-central-agent-skills.md))
 
 ## Infrastructure
 
