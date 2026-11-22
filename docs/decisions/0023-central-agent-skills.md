@@ -139,7 +139,7 @@ where agents actually look.**
   - * `AddServiceDefaults()` + `MapDefaultEndpoints()`; `/health` readiness, `/alive` liveness.
   - Errors leave the HTTP edge as ProblemDetails 400/404/409 with `code`.
   - Publish only to `<topic>`, via the outbox, deterministic ids; handlers idempotent (ADR-0013/0017).
-  - * Options validated at startup; no secrets in config, code or logs.
+  - Options validated at startup; no secrets in config, code or logs.
   - * Workflows pin `aeroflow-workflows` tags and declare `permissions`.
   - Update `docs/service.md` in the same PR as behaviour changes.
 
@@ -161,7 +161,7 @@ check or is marked as review-only:
 | `[LoggerMessage]`, constant templates | Yes: CA1848, CA2254 as errors | — |
 | Warnings fail the build, nullable on | Yes: `Directory.Build.props` | — |
 | Business event ids ≥ 10,000 | No (contract tests cover platform logs only) | A Roslyn analyser in ServiceDefaults |
-| No logging, I/O, clock or `ILogger` in `Domain/` | No | An architecture test (NetArchTest) in the template; banned-namespace check scoped to `Domain/` |
+| No logging, I/O, clock or `ILogger` in `Domain/` | Template only, pending merge: `DomainPurityTests` architecture tests (NetArchTest), [template-dotnet-service #25](https://github.com/aeroflow-air/template-dotnet-service/pull/25) | Same tests copied into each service as it adopts the template |
 | No `throw` for business rules; `Option` not `null` in domain | No | Architecture test for nullable return types in `Domain/`; review for the rest |
 | ProblemDetails for every error response | No | API test asserting `application/problem+json` for 4xx; ServiceDefaults could ship `ProblemResults` |
 | Options validated at startup | No | `ValidateOnStart` in the template plus a startup test that runs with missing config |
@@ -171,7 +171,7 @@ check or is marked as review-only:
 | Pinned workflow tags, explicit `permissions` | Partly: actionlint in aeroflow-workflows | A check in `dotnet-ci.yml` for `@main` and missing `permissions` |
 | ADR shape and lifecycle | Yes: `validate-decisions.py` | — |
 | `docs/service.md` kept current | AI review only | Path rule: `src/` changes in Models, Messaging or settings need a `docs/service.md` change or a label |
-| Skills match the pin | No | `sync-agent-skills.yml` drift check |
+| Skills match the pin | Yes, where adopted: `sync-agent-skills.yml` drift check (aeroflow-workflows v0.7.0), in the template today; not yet a required check | Make it required; roll out to services |
 
 ## Consequences
 
