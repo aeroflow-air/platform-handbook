@@ -1,0 +1,18 @@
+# Shared Resources for the aeroflow-air Backstage catalogue (ADR-0024).
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: event-bus
+  title: Event bus (Azure Service Bus emulator)
+  description: >-
+    The central event bus of ADR-0013: Service Bus topics, one per owning
+    service. Local only today, as the free Service Bus emulator started by the
+    aeroflow-local AppHost (resource name `messaging`). Azure spend is
+    deferred, so no Azure namespace exists.
+  links:
+    - url: https://github.com/aeroflow-air/platform-handbook/blob/main/docs/decisions/0013-central-event-bus.md
+      title: ADR-0013 Central event bus
+spec:
+  type: message-broker
+  owner: group:platform
+  system: developer-platform

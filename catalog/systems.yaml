@@ -1,0 +1,37 @@
+# Org-level Systems for the aeroflow-air Backstage catalogue (ADR-0024).
+apiVersion: backstage.io/v1alpha1
+kind: System
+metadata:
+  name: airport
+  title: Airport
+  description: >-
+    Event-driven airport services. Services never call each other; each reacts
+    to topics on the event bus, and each topic is owned by its one publisher
+    (ADR-0013, ADR-0019). Runs locally only, in aeroflow-local (ADR-0014).
+spec:
+  owner: group:squad-checkin
+  domain: airport-operations
+---
+apiVersion: backstage.io/v1alpha1
+kind: System
+metadata:
+  name: developer-platform
+  title: Developer platform
+  description: >-
+    What squads build on: the handbook and decision records, the service
+    template, ServiceDefaults, reusable workflows, governed Bicep modules,
+    agent skills, the local Aspire environment and the catalogue itself.
+spec:
+  owner: group:platform
+  domain: platform-engineering
+---
+apiVersion: backstage.io/v1alpha1
+kind: System
+metadata:
+  name: public-site
+  title: Public site
+  description: >-
+    AeroFlow's public face: the Astro site and engineering blog on GitHub
+    Pages (ADR-0003) and the GitHub organisation profile.
+spec:
+  owner: group:platform
