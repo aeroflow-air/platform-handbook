@@ -85,8 +85,9 @@ pricing says at that time; nothing here commits to it.
   `documentation`, `infrastructure`, and `tool` for local-only developer
   tooling.
 - **Lifecycle is honest:** `experimental` unless something serves real
-  users. Only `site-customer` (live on GitHub Pages) is `production`.
-  Nothing is deployed to Azure, so no service is `production`.
+  readers. Only the public site (`site-customer` on GitHub Pages) and the
+  org profile (`.github`) are `production`. Nothing is deployed to Azure,
+  so no service is `production`.
 - **Owners** are `group:<github-team-slug>`. A repo whose owner is not
   written down anywhere is owned by `group:platform` until it is.
 - **Annotations:** always `github.com/project-slug`; `backstage.io/techdocs-ref`
