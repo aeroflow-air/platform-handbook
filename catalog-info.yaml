@@ -1,0 +1,32 @@
+# Backstage catalogue entry for this repo (ADR-0024).
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: platform-handbook
+  title: Platform handbook
+  description: >-
+    Governance and documentation: decision records with their validator,
+    architecture, design docs and standards for aeroflow-air.
+  annotations:
+    github.com/project-slug: aeroflow-air/platform-handbook
+    backstage.io/techdocs-ref: dir:.
+  tags:
+    - documentation
+    - adr
+spec:
+  type: documentation
+  lifecycle: experimental
+  owner: group:platform
+  system: developer-platform
+---
+# Org-level Domains, Systems and Resources live in catalog/.
+apiVersion: backstage.io/v1alpha1
+kind: Location
+metadata:
+  name: aeroflow-org-entities
+  description: Org-level Domains, Systems and shared Resources (catalog/).
+spec:
+  targets:
+    - ./catalog/domains.yaml
+    - ./catalog/systems.yaml
+    - ./catalog/resources.yaml

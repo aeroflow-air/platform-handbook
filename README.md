@@ -9,6 +9,10 @@ Questions, or want to challenge a decision record? Start a thread in [Discussion
 - [The airport: architecture and event flows](docs/architecture/airport-overview.md)
 - [Standard: every service documents itself](docs/standards/service-docs.md) ([template](templates/service-doc.md))
 
+## Catalogue
+
+- [Org-level Backstage entities](catalog/README.md) ([ADR-0024](docs/decisions/0024-backstage-service-catalogue.md), draft)
+
 ## Design
 
 - [The workload manifest platform](docs/design/workload-manifest-platform.md)

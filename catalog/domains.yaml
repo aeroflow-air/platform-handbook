@@ -1,0 +1,28 @@
+# Org-level Domains for the aeroflow-air Backstage catalogue (ADR-0024).
+# Reached from the Location in the handbook's root catalog-info.yaml.
+# Groups are not defined here: the githubOrg provider imports the real
+# GitHub teams (platform, squad-checkin) as Group entities.
+apiVersion: backstage.io/v1alpha1
+kind: Domain
+metadata:
+  name: airport-operations
+  title: Airport operations
+  description: >-
+    The fictional LHR airport: flights, gates, baggage and the events that
+    connect them (docs/architecture/airport-overview.md).
+  links:
+    - url: https://github.com/aeroflow-air/platform-handbook/blob/main/docs/architecture/airport-overview.md
+      title: Airport architecture and event flows
+spec:
+  owner: group:squad-checkin
+---
+apiVersion: backstage.io/v1alpha1
+kind: Domain
+metadata:
+  name: platform-engineering
+  title: Platform engineering
+  description: >-
+    The internal developer platform: governance, golden paths, shared
+    libraries, workflows, infrastructure modules and local tooling.
+spec:
+  owner: group:platform
