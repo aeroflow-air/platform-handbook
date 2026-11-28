@@ -97,17 +97,23 @@ pricing says at that time; nothing here commits to it.
   for a package or resource it really uses. No invented HTTP APIs: an
   OpenAPI API entity appears when a service checks in its spec.
 - **Checked-in OpenAPI files.** ADR-0015 (draft) serves the OpenAPI document
-  at `/openapi/v1.json` in Development only, and lists central publishing as
-  a possible follow-up. Backstage reads a file from the repo, so each HTTP
-  service also commits the document it generates to `openapi/<service>.json`.
-  It is a generated artefact, not hand-written: an `OpenApiExportTests` test
-  in the service's existing test project builds the app and fails if the file
-  differs from the live document (regenerate with `UPDATE_OPENAPI=1 dotnet
-  test --filter OpenApiExportTests`). This adds no runtime exposure and no
-  new CI job, and leaves ADR-0015's decision unchanged: the live endpoint
-  stays Development-only. It does fill in the central-publishing follow-up
-  at file level, so ADR-0015 can link here when it is next reviewed.
-  Repos without CI (aeroflow-local) get the test but no enforcement.
+  at `/openapi/v1.json` in Development only. Backstage reads a file from the
+  repo, so each HTTP component also commits its document to
+  `openapi/<name>.json`. It is a generated artefact, never hand-written, and
+  how it is produced depends on the framework (ADR-0015):
+  - **net8 services** (`svc-*`, Swashbuckle): an `OpenApiExportTests` test in
+    the existing test project boots the app and fails if the file differs from
+    the live document (regenerate with `UPDATE_OPENAPI=1 dotnet test --filter
+    OpenApiExportTests`). No new CI job.
+  - **net10 `aeroflow-local`** (flight simulator, built-in generator, no
+    Swashbuckle): `Microsoft.Extensions.ApiDescription.Server` writes the file
+    on every build, and a test compares it with the live document. Drift shows
+    in `git diff`.
+
+  Neither adds runtime exposure; the live endpoint stays Development-only,
+  so ADR-0015's decision is unchanged beyond its own update for net10
+  (platform-handbook#124). `aeroflow-local` has no CI, so those checks only
+  run locally.
 - **Names** match the repo name, so a squad can find the entity from the
   clone URL. A repo created from `template-dotnet-service` renames the
   entity in the same PR (a follow-up adds that step to the new-service
