@@ -79,15 +79,15 @@ pricing says at that time; nothing here commits to it.
 | Resource | shared infrastructure squads depend on (today: `event-bus`, the Service Bus emulator of ADR-0013) | `catalog/resources.yaml` |
 | Group, User | imported from GitHub teams and members | `githubOrg` provider |
 | Component | one per repo, or per deployable when a repo holds several (aeroflow-local) | the repo's `catalog-info.yaml` |
-| API | only where a contract file exists: today the `<domain>-events` examples under `contracts/` (ADR-0019), `type: event-contract` | the producer's `catalog-info.yaml` |
+| API | only where a contract file exists: the `<domain>-events` examples under `contracts/` (ADR-0019), `type: event-contract`; and each HTTP service's exported OpenAPI file under `openapi/`, `type: openapi` | the producer's `catalog-info.yaml` |
 
 - **Component types:** `service`, `website`, `library`, `template`,
   `documentation`, `infrastructure`, and `tool` for local-only developer
   tooling.
-- **Lifecycle is honest:** `experimental` unless something serves real
-  readers. Only the public site (`site-customer` on GitHub Pages) and the
-  org profile (`.github`) are `production`. Nothing is deployed to Azure,
-  so no service is `production`.
+- **Lifecycle is honest:** every entity is `experimental`. Nothing is
+  deployed to Azure and the project is a portfolio piece, so nothing is
+  called `production`, including the public site (Tony's call). `production`
+  is for when something has real users and an owner on call.
 - **Owners** are `group:<github-team-slug>`. A repo whose owner is not
   written down anywhere is owned by `group:platform` until it is.
 - **Annotations:** always `github.com/project-slug`; `backstage.io/techdocs-ref`
@@ -96,6 +96,18 @@ pricing says at that time; nothing here commits to it.
   the component owns, `consumesApis` for a subscription it reads, `dependsOn`
   for a package or resource it really uses. No invented HTTP APIs: an
   OpenAPI API entity appears when a service checks in its spec.
+- **Checked-in OpenAPI files.** ADR-0015 (draft) serves the OpenAPI document
+  at `/openapi/v1.json` in Development only, and lists central publishing as
+  a possible follow-up. Backstage reads a file from the repo, so each HTTP
+  service also commits the document it generates to `openapi/<service>.json`.
+  It is a generated artefact, not hand-written: an `OpenApiExportTests` test
+  in the service's existing test project builds the app and fails if the file
+  differs from the live document (regenerate with `UPDATE_OPENAPI=1 dotnet
+  test --filter OpenApiExportTests`). This adds no runtime exposure and no
+  new CI job, and leaves ADR-0015's decision unchanged: the live endpoint
+  stays Development-only. It does fill in the central-publishing follow-up
+  at file level, so ADR-0015 can link here when it is next reviewed.
+  Repos without CI (aeroflow-local) get the test but no enforcement.
 - **Names** match the repo name, so a squad can find the entity from the
   clone URL. A repo created from `template-dotnet-service` renames the
   entity in the same PR (a follow-up adds that step to the new-service
@@ -117,10 +129,9 @@ the `backstage` repo, and an upgrade every few Backstage releases. If the
 instance is not run for a month, delete it and keep the YAML: the files
 stand on their own.
 
-The repo name `backstage` names a tool, which ADR-0001's "capability, not
-technology" rule discourages. It is accepted because the repo is the
-Backstage app itself: if the tool changes, the repo is replaced, not
-renamed.
+Tony confirmed the repo name `backstage` as a deliberate exception to
+ADR-0001's capability-naming preference: the repo is the Backstage app
+itself, so if the tool changes the repo is replaced, not renamed.
 
 ## Alternatives considered
 
